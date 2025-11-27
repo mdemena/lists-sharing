@@ -7,7 +7,6 @@ import { FaGoogle, FaGithub } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../supabaseClient'; // Necesario para el login social
 import toast from 'react-hot-toast';
-import SimpleDivider from '../components/SimpleDivider.tsx';
 
 // Creamos un contenedor centrado usando styled
 const CenteredContainer = styled(Container)(({ theme }) => ({
