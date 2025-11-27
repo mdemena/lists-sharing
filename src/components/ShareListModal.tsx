@@ -1,6 +1,6 @@
 // frontend/src/components/ShareListModal.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Modal,
     Box,
@@ -11,11 +11,16 @@ import {
     Alert,
     AlertTitle,
     Stack,
+    List as MuiList,
+    ListItem,
+    ListItemText,
+    ListItemIcon,
+    Divider,
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../supabaseClient';
-import { FaInfoCircle, FaShareAlt } from 'react-icons/fa';
-import type { List } from '../types';
+import { FaInfoCircle, FaShareAlt, FaUserCheck, FaUserClock } from 'react-icons/fa';
+import type { List, SharedUser } from '../types';
 import toast from 'react-hot-toast';
 
 interface ShareModalProps {
@@ -37,12 +42,33 @@ const modalStyle = {
     borderRadius: 1,
     boxShadow: 24,
     p: 4,
+    maxHeight: '90vh',
+    overflowY: 'auto',
 };
 
 const ShareListModal: React.FC<ShareModalProps> = ({ isOpen, onClose, list, edgeFunctionUrl }) => {
     const { user } = useAuth();
     const [emailsInput, setEmailsInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [sharedUsers, setSharedUsers] = useState<SharedUser[]>([]);
+
+    useEffect(() => {
+        if (isOpen && list) {
+            fetchSharedUsers();
+        }
+    }, [isOpen, list]);
+
+    const fetchSharedUsers = async () => {
+        try {
+            const { data, error } = await supabase
+                .rpc('get_list_shares_with_status', { p_list_id: list.id });
+
+            if (error) throw error;
+            setSharedUsers(data || []);
+        } catch (error) {
+            console.error('Error fetching shared users:', error);
+        }
+    };
 
     const handleShare = async () => {
         if (!user || !list) return;
@@ -85,8 +111,8 @@ const ShareListModal: React.FC<ShareModalProps> = ({ isOpen, onClose, list, edge
 
             // 2. Éxito
             toast.success(`Invitaciones enviadas a ${recipientEmails.length} personas.`);
-            onClose();
             setEmailsInput('');
+            fetchSharedUsers(); // Refresh the list
 
         } catch (error: any) {
             toast.error(error.message || 'Error al enviar las invitaciones.');
@@ -120,7 +146,7 @@ const ShareListModal: React.FC<ShareModalProps> = ({ isOpen, onClose, list, edge
 
                     <TextareaAutosize
                         aria-label="Ingresa correos electrónicos"
-                        minRows={5}
+                        minRows={3}
                         placeholder="Ingresa las direcciones de correo separadas por comas o saltos de línea (Ej: amigo1@mail.com, amigo2@mail.com)"
                         value={emailsInput}
                         onChange={(e) => setEmailsInput(e.target.value)}
@@ -132,6 +158,53 @@ const ShareListModal: React.FC<ShareModalProps> = ({ isOpen, onClose, list, edge
                             fontFamily: 'Roboto, sans-serif'
                         }}
                     />
+
+                    <Stack direction="row" spacing={2} justifyContent="flex-end">
+                        <Button onClick={onClose} variant="outlined">
+                            Cerrar
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={handleShare}
+                            disabled={isLoading}
+                            startIcon={<FaShareAlt />}
+                        >
+                            Enviar Invitaciones
+                        </Button>
+                    </Stack>
+
+                    <Divider />
+
+                    <Typography variant="subtitle1" fontWeight="bold">
+                        Compartido con:
+                    </Typography>
+
+                    {sharedUsers.length === 0 ? (
+                        <Typography variant="body2" color="text.secondary">
+                            Aún no has compartido esta lista con nadie.
+                        </Typography>
+                    ) : (
+                        <MuiList dense>
+                            {sharedUsers.map((user) => (
+                                <ListItem key={user.email}>
+                                    <ListItemIcon>
+                                        {user.is_registered ? (
+                                            <FaUserCheck color="green" title="Registrado" />
+                                        ) : (
+                                            <FaUserClock color="orange" title="Pendiente de registro" />
+                                        )}
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        primary={user.email}
+                                        secondary={user.is_registered ? 'Registrado' : 'Pendiente de registro'}
+                                    />
+                                </ListItem>
+                            ))}
+                        </MuiList>
+                    )}
+
+                    <Divider />
 
                     <Typography variant="body2" color="text.secondary">
                         O comparte el enlace directamente:
@@ -145,21 +218,6 @@ const ShareListModal: React.FC<ShareModalProps> = ({ isOpen, onClose, list, edge
                             readOnly: true,
                         }}
                     />
-                </Stack>
-
-                <Stack direction="row" spacing={2} justifyContent="flex-end" mt={4}>
-                    <Button onClick={onClose} variant="outlined">
-                        Cancelar
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleShare}
-                        disabled={isLoading}
-                        startIcon={<FaShareAlt />}
-                    >
-                        Enviar Invitaciones
-                    </Button>
                 </Stack>
             </Box>
         </Modal>

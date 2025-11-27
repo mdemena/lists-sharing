@@ -26,6 +26,7 @@ export interface List {
     name: string;
     description: string | null;
     created_at: string; // timestamp
+    list_shares?: { count: number }[];
 }
 
 // Modelo de un Elemento de la Lista
@@ -41,4 +42,9 @@ export interface ListItem {
     is_adjudicated: boolean;
     adjudicated_by: string | null;
     adjudicated_at: string | null;
+}
+
+export interface SharedUser {
+    email: string;
+    is_registered: boolean;
 }

@@ -61,7 +61,7 @@ const Dashboard: React.FC = () => {
             //    Supabase y RLS se encargan de esto, pero la cláusula 'eq' es explícita.
             const { data, error } = await supabase
                 .from('lists')
-                .select('*')
+                .select('*, list_shares(count)')
                 .eq('owner_id', user.id)
                 .order('created_at', { ascending: false });
 
@@ -160,7 +160,7 @@ const Dashboard: React.FC = () => {
                     color="secondary"
                     onClick={() => handleShareClick(list)}
                 >
-                    Compartir
+                    Compartir {list.list_shares?.[0]?.count ? `(${list.list_shares[0].count})` : ''}
                 </Button>
             </CardActions>
         </Card>
