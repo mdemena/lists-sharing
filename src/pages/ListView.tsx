@@ -29,12 +29,10 @@ import {
     IconButton,
     Image,
 } from '@chakra-ui/react';
-import { FaTrash, FaEdit, FaCheck, FaTimes, FaPlus, FaDollarSign, FaStar } from 'react-icons/fa';
+import { FaTrash, FaEdit, FaCheck, FaTimes, FaPlus, FaDollarSign, FaStar, FaExternalLinkAlt } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../supabaseClient';
-import { List, ListItem, ImageUrl, ExternalUrl } from '../types'; // Importamos los tipos
-import { Box, ...VStack, SimpleGrid, Card, CardBody, ...Image, Link, IconButton, Tooltip } from '@chakra-ui/react';
-import { FaExternalLinkAlt, FaImages } from 'react-icons/fa'; // Iconos nuevos
+import type { List, ListItem, ImageUrl, ExternalUrl } from '../types'; // Importamos los tipos
 
 // Tipos para el estado de edición del ítem
 interface CurrentItemState {

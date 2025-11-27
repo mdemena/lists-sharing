@@ -23,7 +23,6 @@ import {
     Card,
     CardHeader,
     CardBody,
-    Spacer,
 } from '@chakra-ui/react';
 import { FaPlus, FaList, FaShareSquare } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,6 +30,7 @@ import { supabase } from '../supabaseClient';
 import type { List } from '../types'; // Importamos la interfaz List
 import { useNavigate } from 'react-router-dom';
 import ShareListModal from '../components/ShareListModal';
+import { processLock } from '@supabase/supabase-js';
 
 const Dashboard: React.FC = () => {
     const { user, signOut } = useAuth();
@@ -40,14 +40,13 @@ const Dashboard: React.FC = () => {
     const [newListDescription, setNewListDescription] = useState('');
     const toast = useToast();
     const navigate = useNavigate();
-    const { isOpen, onOpen, onClose } = useDisclosure();
 
-    const { isOpen, onOpen, onClose } = useDisclosure(); // Usado para el modal de creación de lista
-    const { isOpen: isShareOpen, onOpen: onShareOpen, onClose: onShareClose } = useDisclosure(); // <-- NUEVO: Para el modal de compartir
+    const { open: isOpen, onOpen, onClose } = useDisclosure(); // Usado para el modal de creación de lista
+    const { open: isShareOpen, onOpen: onShareOpen, onClose: onShareClose } = useDisclosure(); // <-- NUEVO: Para el modal de compartir
     const [listToShare, setListToShare] = useState<List | null>(null); // <-- NUEVO: Almacena la lista a compartir
 
     // URL de la Edge Function (ajusta la ruta y el dominio de tu proyecto Supabase)
-    const EDGE_FUNCTION_URL = 'https://[TU_PROYECTO_ID].supabase.co/functions/v1/share-list-email';
+    const EDGE_FUNCTION_URL = import.meta.env.VITE_SUPABASE_URL + '/functions/v1/share-list-email';
     // --- Lógica de Carga de Datos ---
     const fetchUserLists = async () => {
         if (!user) return;
