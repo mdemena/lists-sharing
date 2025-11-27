@@ -1,7 +1,7 @@
 // frontend/src/App.tsx
 
 import { Routes, Route } from 'react-router-dom';
-import { Box, Center, Heading, Text } from '@chakra-ui/react'; // Importamos componentes de Chakra
+import { Box, Typography } from '@mui/material';
 import NavBar from './components/NavBar.tsx'; // Importamos el NavBar
 import ProtectedRoute from './components/ProtectedRoute.tsx';
 
@@ -9,44 +9,30 @@ import ProtectedRoute from './components/ProtectedRoute.tsx';
 import Login from './pages/Login.tsx';
 import Dashboard from './pages/Dashboard.tsx';
 import ListView from './pages/ListView.tsx';
-
-// Componente para la página de inicio simple
-const Home: React.FC = () => (
-  <Center h="90vh" flexDirection="column" pt={0}> {/* pt={0} evita que el NavBar lo empuje */}
-    <Heading mb={4} size="2xl" color="purple.600">
-      🎁 Antigravity List
-    </Heading>
-    <Text fontSize="xl" color="gray.600">
-      Crea y comparte listas de deseos, regalos o compras fácilmente.
-    </Text>
-  </Center>
-);
+import Home from './pages/Home.tsx';
 
 function App() {
   return (
-    <Box minH="100vh" bg="gray.50">
-      {/* 1. La Barra de Navegación se coloca fuera del Routes */}
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
       <NavBar />
 
       <Routes>
-        {/* Rutas Públicas */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
 
-        {/* 2. Ruta de Acceso Compartido (Pública/Requiere registro) */}
+        {/* Ruta de Acceso Compartido */}
         <Route path="/share/:listId" element={<ListView />} />
 
-        {/* 3. Rutas Privadas: Protegidas por autenticación */}
+        {/* Rutas Privadas: Protegidas */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/list/:listId/edit" element={<ListView />} />
         </Route>
 
-        {/* Opcional: Ruta para manejar 404 */}
-        <Route path="*" element={<Center h="90vh"><Heading>404 | Página no encontrada</Heading></Center>} />
+        {/* Manejo 404 */}
+        <Route path="*" element={<Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '90vh' }}><Typography variant="h4">404 | Página no encontrada</Typography></Box>} />
       </Routes>
     </Box>
   );
 }
-
 export default App;

@@ -3,7 +3,7 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Spinner, Center } from '@chakra-ui/react';
+import { CircularProgress, Box } from '@mui/material';
 
 /**
  * Componente de Ruta Protegida.
@@ -15,9 +15,16 @@ const ProtectedRoute: React.FC = () => {
     // Muestra un Spinner mientras se carga la sesión de Supabase
     if (loading) {
         return (
-            <Center minH="100vh">
-                <Spinner size="xl" color="purple.500" thickness="4px" />
-            </Center>
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: '100vh'
+                }}
+            >
+                <CircularProgress size={60} color="primary" thickness={4} />
+            </Box>
         );
     }
 

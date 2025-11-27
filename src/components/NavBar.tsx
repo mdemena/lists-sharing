@@ -1,83 +1,88 @@
 // frontend/src/components/NavBar.tsx
 
 import React from 'react';
-import { Box, Flex, Heading, Button, Spacer, HStack, useToast } from '@chakra-ui/react';
+import { AppBar, Toolbar, Typography, Button, Box, IconButton } from '@mui/material';
 import { FaSignOutAlt, FaListUl, FaHome } from 'react-icons/fa';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 const NavBar: React.FC = () => {
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
-  const toast = useToast();
+
 
   const handleLogout = async () => {
     try {
       await signOut();
-      toast({
-        title: 'Sesión cerrada.',
-        status: 'info',
-        duration: 3000,
-        isClosable: true,
-      });
+      // ✅ SUSTITUCIÓN: Llamada directa a toast
+      toast.success('Has cerrado sesión.', { duration: 4000 });
       navigate('/login');
-    } catch (error) {
-      toast({
-        title: 'Error al cerrar sesión',
-        status: 'error',
-      });
+    } catch (error: any) {
+      toast.error(`Error de Cierre de Sesión: ${error.message || 'Ocurrió un error inesperado.'}`);
     }
   };
 
   return (
-    <Box bg="purple.600" px={{ base: 4, md: 8 }} py={3} color="white" boxShadow="md">
-      <Flex h={10} alignItems="center">
-        <Heading as="h1" size="md" letterSpacing={'tight'}>
-          <Link to={user ? "/dashboard" : "/"}>
-            🎁 Antigravity List
-          </Link>
-        </Heading>
+    // AppBar de MUI es la barra de navegación principal
+    <AppBar position="static" color="primary">
+      <Toolbar>
+        {/* Título de la Aplicación */}
+        <Typography
+          variant="h6"
+          component={RouterLink} // Usamos RouterLink para manejar la navegación interna
+          to={user ? "/dashboard" : "/"}
+          sx={{ flexGrow: 1, textDecoration: 'none', color: 'inherit', fontWeight: 'bold' }}
+        >
+          🎁 Lists Sharing
+        </Typography>
 
-        <Spacer />
-
-        <HStack spacing={4}>
+        {/* Contenedor de Botones (Derecha) */}
+        <Box sx={{ display: 'flex', gap: 1 }}>
           {user && (
             <>
+              {/* Botón Mis Listas */}
               <Button
-                as={Link}
+                component={RouterLink}
                 to="/dashboard"
-                leftIcon={<FaListUl />}
-                variant="ghost"
-                color="white"
-                _hover={{ bg: "purple.700" }}
-                size="sm"
+                startIcon={<FaListUl />}
+                color="inherit" // Hereda el color blanco de AppBar
               >
                 Mis Listas
               </Button>
+              {/* Botón Salir */}
               <Button
                 onClick={handleLogout}
-                leftIcon={<FaSignOutAlt />}
-                colorScheme="red"
-                size="sm"
+                startIcon={<FaSignOutAlt />}
+                variant="contained"
+                size="small"
+                sx={{
+                  bgcolor: 'error.main', // Color rojo para el botón de salir
+                  '&:hover': { bgcolor: 'error.dark' }
+                }}
               >
                 Salir
               </Button>
             </>
           )}
           {!user && (
+            // Botón Iniciar Sesión (visible cuando no hay usuario)
             <Button
-              as={Link}
+              component={RouterLink}
               to="/login"
-              colorScheme="purple"
-              bg="purple.400"
-              size="sm"
+              variant="contained"
+              size="small"
+              sx={{
+                bgcolor: 'primary.light',
+                '&:hover': { bgcolor: 'primary.dark' }
+              }}
             >
               Iniciar Sesión
             </Button>
           )}
-        </HStack>
-      </Flex>
-    </Box>
+        </Box>
+      </Toolbar>
+    </AppBar>
   );
 };
 

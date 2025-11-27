@@ -4,35 +4,44 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import {
     Box,
-    Heading,
-    Text,
-    Spinner,
-    Center,
-    useToast,
+    Typography,
     Button,
-    VStack,
-    HStack,
-    SimpleGrid,
-    Card,
-    CardBody,
-    Input,
-    Textarea,
-    Select,
-    useDisclosure,
+    Stack,
+    Grid,
     Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalCloseButton,
-    ModalBody,
-    ModalFooter,
+    TextField,
+    Select,
+    MenuItem,
+    CircularProgress,
     IconButton,
-    Image,
-} from '@chakra-ui/react';
+    Card,
+    CardContent,
+    CardMedia,
+    Tooltip,
+    TextareaAutosize,
+    InputLabel,
+    FormControl,
+} from '@mui/material';
 import { FaTrash, FaEdit, FaCheck, FaTimes, FaPlus, FaDollarSign, FaStar, FaExternalLinkAlt } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../supabaseClient';
 import type { List, ListItem, ImageUrl, ExternalUrl } from '../types'; // Importamos los tipos
+import toast from 'react-hot-toast';
+
+// --- Estilos para el Modal de MUI ---
+const modalStyle = {
+    position: 'absolute' as 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: { xs: '90%', sm: 600, md: 700 },
+    maxHeight: '90vh',
+    overflowY: 'auto',
+    bgcolor: 'background.paper',
+    borderRadius: 1,
+    boxShadow: 24,
+    p: 4,
+};
 
 // Tipos para el estado de edición del ítem
 interface CurrentItemState {
@@ -53,34 +62,47 @@ const ImageCarousel: React.FC<{ images: ImageUrl[] }> = ({ images }) => {
     const currentImage = images[currentIndex];
 
     return (
-        <Box position="relative" w="100%" h="200px" overflow="hidden" borderTopRadius="md">
-            <Image
-                src={currentImage.url}
+        <Box position="relative" width="100%" height="200px" overflow="hidden">
+            <CardMedia
+                component="img"
+                image={currentImage.url}
                 alt={currentImage.label || "Imagen del ítem"}
-                objectFit="cover"
-                h="100%"
-                w="100%"
-                fallbackSrc="https://via.placeholder.com/400x200?text=Sin+Imagen"
+                sx={{ height: '100%', objectFit: 'cover' }}
             />
             {images.length > 1 && (
-                // Controles de navegación (simplificado)
-                <HStack position="absolute" bottom={2} right={2} spacing={1}>
-                    <Text fontSize="xs" bg="blackAlpha.600" color="white" px={2} py={1} borderRadius="md">
+                <Stack
+                    direction="row"
+                    spacing={1}
+                    position="absolute"
+                    bottom={8}
+                    right={8}
+                    sx={{ bgcolor: 'black.main', borderRadius: 1 }}
+                >
+                    <Typography
+                        variant="caption"
+                        color="white"
+                        px={1}
+                        py={0.5}
+                        mr={1}
+                        sx={{ bgcolor: 'rgba(0,0,0,0.6)', borderRadius: 1 }}
+                    >
                         {currentIndex + 1} / {images.length}
-                    </Text>
+                    </Typography>
                     <Button
-                        size="xs"
+                        size="small"
                         onClick={() => setCurrentIndex((currentIndex - 1 + images.length) % images.length)}
+                        sx={{ color: 'white' }}
                     >
                         &lt;
                     </Button>
                     <Button
-                        size="xs"
+                        size="small"
                         onClick={() => setCurrentIndex((currentIndex + 1) % images.length)}
+                        sx={{ color: 'white' }}
                     >
                         &gt;
                     </Button>
-                </HStack>
+                </Stack>
             )}
         </Box>
     );
@@ -94,13 +116,12 @@ const ListView: React.FC = () => {
     const isOwnerMode = location.pathname.includes('/edit');
 
     const { user } = useAuth();
-    const toast = useToast();
     const [list, setList] = useState<List | null>(null);
     const [items, setItems] = useState<ListItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     // Estado y Hooks para el Modal de Añadir/Editar Item
-    const { isOpen, onOpen, onClose } = useDisclosure();
+    const [modalOpen, setModalOpen] = useState(false);
     const [currentItem, setCurrentItem] = useState<CurrentItemState>({
         name: '',
         description: '',
@@ -110,6 +131,9 @@ const ListView: React.FC = () => {
         estimated_cost: 0,
     });
     const [isEditingItem, setIsEditingItem] = useState(false);
+    // --- Lógica de Manejo de Modales ---
+    const handleOpen = () => setModalOpen(true);
+    const handleClose = () => setModalOpen(false);
 
     // --- Lógica de Carga de Datos ---
     const fetchListData = async () => {
@@ -138,11 +162,7 @@ const ListView: React.FC = () => {
             setItems(itemsData as ListItem[]);
 
         } catch (error: any) {
-            toast({
-                title: 'Error de carga',
-                description: 'No se pudo cargar la lista o sus ítems.',
-                status: 'error',
-            });
+            toast.error('No se pudo cargar la lista o sus ítems.');
             console.error(error);
             // Si la lista no existe o no tiene acceso, redirigir al dashboard
             if (error.code === 'PGRST116') navigate('/dashboard');
@@ -196,9 +216,10 @@ const ListView: React.FC = () => {
 
     // --- Lógica CRUD (Owner Mode) ---
 
+    // --- Adaptación de handleOpenModal ---
     const handleOpenModal = (item?: ListItem) => {
+        // ... (Lógica de inicialización de currentItem idéntica)
         if (item) {
-            // Editar
             setCurrentItem({
                 id: item.id,
                 name: item.name,
@@ -210,23 +231,17 @@ const ListView: React.FC = () => {
             });
             setIsEditingItem(true);
         } else {
-            // Añadir nuevo
             setCurrentItem({
-                name: '',
-                description: '',
-                image_urls: [],
-                urls: [],
-                importance: 3,
-                estimated_cost: 0,
+                name: '', description: '', image_urls: [], urls: [], importance: 3, estimated_cost: 0,
             });
             setIsEditingItem(false);
         }
-        onOpen();
+        handleOpen(); // Abrir el modal
     };
 
     const handleSaveItem = async () => {
         if (!currentItem.name.trim() || !listId) {
-            toast({ title: 'El nombre del ítem es obligatorio.', status: 'warning' });
+            toast.error('El nombre del ítem es obligatorio.');
             return;
         }
 
@@ -267,26 +282,17 @@ const ListView: React.FC = () => {
                 setItems([...items, data as ListItem]);
             }
 
-            toast({ title: 'Ítem guardado con éxito.', status: 'success' });
-            onClose();
+            toast.success('Ítem guardado con éxito.');
+            handleClose();
         } catch (error: any) {
-            toast({
-                title: 'Error al guardar',
-                description: error.message || 'Error al guardar el elemento.',
-                status: 'error',
-            });
+            toast.error(error.message || 'Error al guardar el elemento.');
         }
     };
 
     const handleDeleteItem = async (item: ListItem) => {
         // RESTRICCIÓN CLAVE: NO PERMITIR ELIMINAR SI ESTÁ ADJUDICADO
         if (item.is_adjudicated) {
-            toast({
-                title: '¡No permitido!',
-                description: 'No puedes eliminar un elemento que ya ha sido adjudicado.',
-                status: 'error',
-                duration: 5000,
-            });
+            toast.error('No puedes eliminar un elemento que ya ha sido adjudicado.');
             return;
         }
 
@@ -301,13 +307,9 @@ const ListView: React.FC = () => {
             if (error) throw error;
 
             setItems(items.filter(i => i.id !== item.id));
-            toast({ title: 'Ítem eliminado.', status: 'success' });
+            toast.success('Ítem eliminado.');
         } catch (error: any) {
-            toast({
-                title: 'Error de eliminación',
-                description: error.message,
-                status: 'error',
-            });
+            toast.error(error.message || 'Error al eliminar el elemento.');
         }
     };
 
@@ -316,12 +318,12 @@ const ListView: React.FC = () => {
     const handleAdjudicate = async (item: ListItem, adjudicate: boolean) => {
         // ... (Lógica de adjudicación idéntica a la anterior, ya que el cambio es solo en el modelo de datos de imagen)
         if (!user) {
-            toast({ title: 'Debes iniciar sesión para adjudicar un ítem.', status: 'warning' });
+            toast.error('Debes iniciar sesión para adjudicar un ítem.');
             return;
         }
 
         if (!adjudicate && item.adjudicated_by && item.adjudicated_by !== user.id) {
-            toast({ title: 'Error', description: 'No puedes desadjudicar un ítem tomado por otra persona.', status: 'error' });
+            toast.error('No puedes desadjudicar un ítem tomado por otra persona.');
             return;
         }
 
@@ -344,13 +346,10 @@ const ListView: React.FC = () => {
             if (error) throw error;
 
             setItems(items.map(i => (i.id === item.id ? data as ListItem : i)));
-            toast({
-                title: adjudicate ? '¡Adjudicado!' : 'Liberado.',
-                status: adjudicate ? 'success' : 'info',
-            });
+            toast(adjudicate ? '¡Adjudicado!' : 'Liberado.');
 
         } catch (error: any) {
-            toast({ title: 'Error de Adjudicación', description: error.message, status: 'error' });
+            toast.error(error.message || 'Error al adjudicar el elemento.');
         }
     };
 
@@ -360,253 +359,266 @@ const ListView: React.FC = () => {
         const isAdjudicatedByOthers = item.is_adjudicated && item.adjudicated_by !== user?.id;
 
         const AdjudicationStatus = (
-            <HStack bg={item.is_adjudicated ? 'red.100' : 'green.100'} p={1} borderRadius="md" mt={1}>
-                <Text fontSize="sm" fontWeight="bold" color={item.is_adjudicated ? 'red.700' : 'green.700'}>
-                    {item.is_adjudicated ? 'ADJUDICADO' : 'DISPONIBLE'}
-                </Text>
-            </HStack>
+            <Box sx={{
+                bgcolor: item.is_adjudicated ? 'error.light' : 'success.light',
+                color: item.is_adjudicated ? 'error.dark' : 'success.dark',
+                p: 0.5,
+                borderRadius: 1,
+                fontWeight: 'bold',
+                fontSize: '0.8rem'
+            }}>
+                {item.is_adjudicated ? 'ADJUDICADO' : 'DISPONIBLE'}
+            </Box>
         );
 
-        const firstImageUrl = item.image_urls && item.image_urls.length > 0 ? item.image_urls[0].url : null;
-
         return (
-            <Card
-                w="100%"
-                minH="250px"
-                shadow={item.is_adjudicated ? 'lg' : 'md'}
-                borderLeft={item.is_adjudicated ? '5px solid red' : '5px solid green'}
-            >
+            <Card sx={{
+                width: '100%',
+                minHeight: '250px',
+                boxShadow: 3,
+                borderLeft: `5px solid ${item.is_adjudicated ? 'red' : 'green'}`
+            }}>
+                {/* Carrusel de Imágenes */}
                 <ImageCarousel images={item.image_urls || []} />
-                <CardBody>
-                    <VStack align="flex-start" spacing={1}>
-                        <Heading size="md">{item.name}</Heading>
-                        {AdjudicationStatus}
-                        <Text mt={2} noOfLines={3} fontSize="sm">{item.description || 'Sin descripción.'}</Text>
-                    </VStack>
 
-                    <HStack fontSize="sm" mt={3} wrap="wrap">
-                        <HStack>
-                            <FaStar color="gold" />
-                            <Text>Imp: {item.importance}</Text>
-                        </HStack>
-                        <HStack ml={4}>
-                            <FaDollarSign color="green" />
-                            <Text>Coste Est.: ${item.estimated_cost?.toFixed(2) || 'N/A'}</Text>
-                        </HStack>
-                        {/* ENLACES EXTERNOS */}
-                        {item.urls && item.urls.length > 0 && (
-                            <HStack ml={4} spacing={2} overflowX="auto" pb={1}>
-                                {item.urls.map((extUrl, index) => (
-                                    <Tooltip key={index} label={extUrl.label || "Enlace externo"} shouldWrapChildren>
-                                        <Link href={extUrl.url} isExternal>
-                                            <IconButton
-                                                icon={<FaExternalLinkAlt />}
-                                                aria-label={`Enlace a ${extUrl.label || 'Recurso'}`}
-                                                size="xs"
-                                                colorScheme="blue"
-                                                variant="outline"
-                                            />
-                                        </Link>
-                                    </Tooltip>
-                                ))}
-                            </HStack>
-                        )}
-                    </HStack>
+                <CardContent>
+                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={1}>
+                        <Typography variant="h6" component="h3">{item.name}</Typography>
+                        {AdjudicationStatus}
+                    </Stack>
+
+                    <Typography variant="body2" color="text.secondary" mb={2} noWrap sx={{ overflow: 'hidden', textOverflow: 'ellipsis', WebkitLineClamp: 3 }}>
+                        {item.description || 'Sin descripción.'}
+                    </Typography>
+
+                    <Stack direction="row" spacing={2} alignItems="center" fontSize="small" mb={2}>
+                        <Stack direction="row" alignItems="center" spacing={0.5}>
+                            <Box sx={{ color: 'gold' }}><FaStar size={14} /></Box>
+                            <Typography variant="caption">Imp: {item.importance}</Typography>
+                        </Stack>
+                        <Stack direction="row" alignItems="center" spacing={0.5}>
+                            <Box sx={{ color: 'success.main' }}><FaDollarSign size={14} /></Box>
+                            <Typography variant="caption">Coste Est.: ${item.estimated_cost?.toFixed(2) || 'N/A'}</Typography>
+                        </Stack>
+                    </Stack>
+
+                    {/* Enlaces Externos */}
+                    <Stack direction="row" spacing={1} overflow="auto" pb={1} sx={{ mt: 1 }}>
+                        {item.urls && item.urls.length > 0 && item.urls.map((extUrl, index) => (
+                            <Tooltip key={index} title={extUrl.label || "Enlace externo"}>
+                                <IconButton
+                                    size="small"
+                                    color="primary"
+                                    onClick={() => window.open(extUrl.url, '_blank')}
+                                >
+                                    <FaExternalLinkAlt size={12} />
+                                </IconButton>
+                            </Tooltip>
+                        ))}
+                    </Stack>
 
                     {/* Acciones */}
-                    <HStack spacing={2} pt={4} justify="flex-end" w="100%">
+                    <Stack direction="row" spacing={1} justifyContent="flex-end" pt={2}>
                         {isOwnerMode ? (
-                            // PROPIETARIO: Edición y Eliminación
                             <>
-                                <Button leftIcon={<FaEdit />} size="sm" onClick={() => handleOpenModal(item)}>Editar</Button>
+                                <Button size="small" variant="outlined" startIcon={<FaEdit />} onClick={() => handleOpenModal(item)}>Editar</Button>
                                 <IconButton
-                                    icon={<FaTrash />}
-                                    aria-label="Eliminar ítem"
-                                    colorScheme="red"
-                                    size="sm"
+                                    size="small"
+                                    color="error"
                                     onClick={() => handleDeleteItem(item)}
-                                    isDisabled={item.is_adjudicated}
-                                />
+                                    disabled={item.is_adjudicated}
+                                >
+                                    <FaTrash size={14} />
+                                </IconButton>
                             </>
                         ) : (
-                            // INVITADO: Adjudicación
                             user && (
                                 <>
                                     {isAdjudicatedByCurrentUser ? (
-                                        <Button
-                                            leftIcon={<FaTimes />}
-                                            colorScheme="orange"
-                                            size="sm"
-                                            onClick={() => handleAdjudicate(item, false)}
-                                        >
+                                        <Button size="small" variant="contained" color="warning" startIcon={<FaTimes />} onClick={() => handleAdjudicate(item, false)}>
                                             Soltar
                                         </Button>
                                     ) : item.is_adjudicated ? (
-                                        <Button colorScheme="red" size="sm" isDisabled>
+                                        <Button size="small" variant="contained" color="error" disabled>
                                             Reservado
                                         </Button>
                                     ) : (
-                                        <Button
-                                            leftIcon={<FaCheck />}
-                                            colorScheme="green"
-                                            size="sm"
-                                            onClick={() => handleAdjudicate(item, true)}
-                                        >
+                                        <Button size="small" variant="contained" color="success" startIcon={<FaCheck />} onClick={() => handleAdjudicate(item, true)}>
                                             Yo lo tomo
                                         </Button>
                                     )}
                                 </>
                             )
                         )}
-                    </HStack>
-                </CardBody>
+                    </Stack>
+                </CardContent>
             </Card>
         );
     };
 
     if (isLoading || !list) {
         return (
-            <Center minH="100vh">
-                <Spinner size="xl" color="purple.500" />
-            </Center>
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: '100vh'
+                }}
+            >
+                <CircularProgress color="primary" />
+            </Box>
         );
     }
 
     // --- Renderizado Principal ---
     return (
-        <Box p={{ base: 4, md: 8 }} maxW="6xl" mx="auto">
-            <Heading as="h1" size="xl" mb={2}>{list.name}</Heading>
-            <Text fontSize="lg" color="gray.600" mb={6}>
-                {isOwnerMode ? `Modo Edición - ${list.description}` : `Lista Compartida - ${list.description}`}
-            </Text>
+        <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 'lg', mx: 'auto' }}>
+            <Typography variant="h3" component="h1" mb={1}>{list.name}</Typography>
+            <Typography variant="h6" color="text.secondary" mb={4}>
+                {isOwnerMode ? `Modo Edición` : `Lista Compartida`}: {list.description}
+            </Typography>
 
             {isOwnerMode && (
-                <Button leftIcon={<FaPlus />} colorScheme="purple" mb={8} onClick={() => handleOpenModal()}>
+                <Button variant="contained" color="primary" startIcon={<FaPlus />} sx={{ mb: 4 }} onClick={() => handleOpenModal()}>
                     Añadir Nuevo Ítem
                 </Button>
             )}
 
-            <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+            <Grid container spacing={3}>
                 {items.map(item => (
-                    <ItemCard key={item.id} item={item} />
+                    <Grid item xs={12} sm={6} md={4} key={item.id}>
+                        <ItemCard item={item} />
+                    </Grid>
                 ))}
-            </SimpleGrid>
+            </Grid>
 
-            {/* --- Modal de Añadir/Editar Ítem --- */}
-            <Modal isOpen={isOpen} onClose={onClose} size="xl">
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>{isEditingItem ? 'Editar Ítem' : 'Añadir Nuevo Ítem'}</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                        <VStack spacing={4}>
-                            <Input
-                                placeholder="Nombre del Ítem"
-                                value={currentItem.name}
-                                onChange={(e) => setCurrentItem({ ...currentItem, name: e.target.value })}
-                            />
-                            <Textarea
-                                placeholder="Descripción completa"
-                                value={currentItem.description}
-                                onChange={(e) => setCurrentItem({ ...currentItem, description: e.target.value })}
-                            />
+            {/* --- Modal de Añadir/Editar Ítem (MUI) --- */}
+            <Modal open={modalOpen} onClose={handleClose}>
+                <Box sx={modalStyle}>
+                    <Typography variant="h5" component="h2" mb={3}>
+                        {isEditingItem ? 'Editar Ítem' : 'Añadir Nuevo Ítem'}
+                    </Typography>
 
-                            <HStack w="100%">
+                    <Stack spacing={3}>
+                        <TextField
+                            label="Nombre del Ítem"
+                            fullWidth
+                            value={currentItem.name}
+                            onChange={(e) => setCurrentItem({ ...currentItem, name: e.target.value })}
+                        />
+                        <TextareaAutosize
+                            placeholder="Descripción completa"
+                            minRows={3}
+                            style={{
+                                width: '100%',
+                                padding: '10px',
+                                border: '1px solid #ccc',
+                                borderRadius: '4px',
+                                fontFamily: 'Roboto, sans-serif'
+                            }}
+                            value={currentItem.description}
+                            onChange={(e) => setCurrentItem({ ...currentItem, description: e.target.value })}
+                        />
+
+                        <Stack direction="row" spacing={2}>
+                            <FormControl fullWidth>
+                                <InputLabel>Importancia (1-5)</InputLabel>
                                 <Select
+                                    label="Importancia (1-5)"
                                     value={currentItem.importance.toString()}
-                                    onChange={(e) => setCurrentItem({ ...currentItem, importance: parseInt(e.target.value) || 3 })}
-                                    placeholder="Importancia (1-5)"
+                                    onChange={(e) => setCurrentItem({ ...currentItem, importance: parseInt(e.target.value as string) })}
                                 >
-                                    {[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{n} - {n === 5 ? 'Máxima' : n === 1 ? 'Mínima' : ''}</option>)}
+                                    {[5, 4, 3, 2, 1].map(n => <MenuItem key={n} value={n}>{n} - {n === 5 ? 'Máxima' : n === 1 ? 'Mínima' : ''}</MenuItem>)}
                                 </Select>
-                                <Input
-                                    type="number"
-                                    placeholder="Coste Estimado ($)"
-                                    value={currentItem.estimated_cost}
-                                    onChange={(e) => setCurrentItem({ ...currentItem, estimated_cost: parseFloat(e.target.value) || 0 })}
-                                />
-                            </HStack>
+                            </FormControl>
+                            <TextField
+                                label="Coste Estimado ($)"
+                                type="number"
+                                fullWidth
+                                value={currentItem.estimated_cost}
+                                onChange={(e) => setCurrentItem({ ...currentItem, estimated_cost: parseFloat(e.target.value) || 0 })}
+                            />
+                        </Stack>
 
-                            {/* Bloque de URLs de Imágenes */}
-                            <Heading size="sm" mt={4} mb={2}>Imágenes del Ítem</Heading>
-                            <VStack spacing={3} w="100%" alignItems="flex-start">
-                                {currentItem.image_urls.map((image, index) => (
-                                    <Box key={`img-${index}`} p={3} borderWidth="1px" borderRadius="md" w="100%">
-                                        <HStack w="100%" mb={2}>
-                                            <Input
-                                                placeholder={`URL de Imagen ${index + 1}`}
-                                                value={image.url}
-                                                onChange={(e) => handleMediaUrlChange(index, 'url', e.target.value, 'image')}
-                                                size="sm"
-                                            />
-                                            <IconButton
-                                                icon={<FaTrash />}
-                                                aria-label="Eliminar Imagen URL"
-                                                colorScheme="red"
-                                                onClick={() => handleRemoveMediaUrl(index, 'image')}
-                                                size="sm"
-                                                variant="ghost"
-                                            />
-                                        </HStack>
-                                        <Input
-                                            placeholder="Etiqueta (Ej: Foto Principal)"
-                                            value={image.label}
-                                            onChange={(e) => handleMediaUrlChange(index, 'label', e.target.value, 'image')}
-                                            size="sm"
+                        {/* Bloque de URLs de Imágenes */}
+                        {/* ... (Implementación de manejo de arrays similar a Login.tsx pero con TextField) */}
+                        <Typography variant="h6" mt={2}>Imágenes del Ítem</Typography>
+                        <Stack spacing={2}>
+                            {currentItem.image_urls.map((image, index) => (
+                                <Box key={`img-${index}`} sx={{ border: '1px solid #eee', p: 1, borderRadius: 1 }}>
+                                    <Stack direction="row" spacing={1} alignItems="center">
+                                        <TextField
+                                            label={`URL de Imagen ${index + 1}`}
+                                            size="small"
+                                            fullWidth
+                                            value={image.url}
+                                            onChange={(e) => handleMediaUrlChange(index, 'url', e.target.value, 'image')}
                                         />
-                                    </Box>
-                                ))}
-                                <Button leftIcon={<FaPlus />} size="sm" variant="outline" onClick={() => handleAddMediaUrl('image')} isFullWidth>
-                                    Añadir Imagen
-                                </Button>
-                            </VStack>
+                                        <IconButton size="small" color="error" onClick={() => handleRemoveMediaUrl(index, 'image')}>
+                                            <FaTrash size={14} />
+                                        </IconButton>
+                                    </Stack>
+                                    <TextField
+                                        label="Etiqueta (Ej: Foto Principal)"
+                                        size="small"
+                                        fullWidth
+                                        value={image.label}
+                                        onChange={(e) => handleMediaUrlChange(index, 'label', e.target.value, 'image')}
+                                        sx={{ mt: 1 }}
+                                    />
+                                </Box>
+                            ))}
+                            <Button variant="outlined" onClick={() => handleAddMediaUrl('image')} startIcon={<FaPlus />}>
+                                Añadir Imagen
+                            </Button>
+                        </Stack>
 
-                            {/* Bloque de URLs Externas (Links) - Reutilizando la lógica */}
-                            <Heading size="sm" mt={4} mb={2}>Enlaces de Compra/Referencia</Heading>
-                            <VStack spacing={3} w="100%" alignItems="flex-start">
-                                {currentItem.urls.map((extUrl, index) => (
-                                    <Box key={`url-${index}`} p={3} borderWidth="1px" borderRadius="md" w="100%">
-                                        <HStack w="100%" mb={2}>
-                                            <Input
-                                                placeholder={`URL Externa ${index + 1}`}
-                                                value={extUrl.url}
-                                                onChange={(e) => handleMediaUrlChange(index, 'url', e.target.value, 'external')}
-                                                size="sm"
-                                            />
-                                            <IconButton
-                                                icon={<FaTrash />}
-                                                aria-label="Eliminar URL Externa"
-                                                colorScheme="red"
-                                                onClick={() => handleRemoveMediaUrl(index, 'external')}
-                                                size="sm"
-                                                variant="ghost"
-                                            />
-                                        </HStack>
-                                        <Input
-                                            placeholder="Etiqueta (Ej: Amazon, Tienda Oficial)"
-                                            value={extUrl.label}
-                                            onChange={(e) => handleMediaUrlChange(index, 'label', e.target.value, 'external')}
-                                            size="sm"
+                        {/* Bloque de URLs Externas (Links) */}
+                        <Typography variant="h6" mt={2}>Enlaces de Compra</Typography>
+                        <Stack spacing={2}>
+                            {currentItem.urls.map((extUrl, index) => (
+                                <Box key={`url-${index}`} sx={{ border: '1px solid #eee', p: 1, borderRadius: 1 }}>
+                                    <Stack direction="row" spacing={1} alignItems="center">
+                                        <TextField
+                                            label={`URL Externa ${index + 1}`}
+                                            size="small"
+                                            fullWidth
+                                            value={extUrl.url}
+                                            // Usamos type: 'external' en el handler de medios
+                                            onChange={(e) => handleMediaUrlChange(index, 'url', e.target.value, 'external')}
                                         />
-                                    </Box>
-                                ))}
-                                <Button leftIcon={<FaPlus />} size="sm" variant="outline" onClick={() => handleAddMediaUrl('external')} isFullWidth>
-                                    Añadir Enlace
-                                </Button>
-                            </VStack>
+                                        <IconButton size="small" color="error" onClick={() => handleRemoveMediaUrl(index, 'external')}>
+                                            <FaTrash size={14} />
+                                        </IconButton>
+                                    </Stack>
+                                    <TextField
+                                        label="Etiqueta (Ej: Amazon, Tienda Oficial)"
+                                        size="small"
+                                        fullWidth
+                                        value={extUrl.label}
+                                        // Usamos type: 'external' en el handler de medios
+                                        onChange={(e) => handleMediaUrlChange(index, 'label', e.target.value, 'external')}
+                                        sx={{ mt: 1 }}
+                                    />
+                                </Box>
+                            ))}
+                            <Button variant="outlined" onClick={() => handleAddMediaUrl('external')} startIcon={<FaPlus />}>
+                                Añadir Enlace
+                            </Button>
+                        </Stack>
 
-                        </VStack>
-                    </ModalBody>
+                    </Stack>
 
-                    <ModalFooter>
-                        <Button variant="ghost" mr={3} onClick={onClose}>
+                    <Stack direction="row" spacing={2} justifyContent="flex-end" mt={4}>
+                        <Button variant="outlined" onClick={handleClose}>
                             Cancelar
                         </Button>
-                        <Button colorScheme="purple" onClick={handleSaveItem}>
+                        <Button variant="contained" color="primary" onClick={handleSaveItem}>
                             {isEditingItem ? 'Guardar Cambios' : 'Añadir Ítem'}
                         </Button>
-                    </ModalFooter>
-                </ModalContent>
+                    </Stack>
+                </Box>
             </Modal>
         </Box>
     );

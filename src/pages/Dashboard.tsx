@@ -3,27 +3,18 @@
 import React, { useState, useEffect } from 'react';
 import {
     Box,
-    Heading,
+    Typography,
     Button,
-    VStack,
-    HStack,
-    Text,
-    useToast,
-    Spinner,
+    Stack,
+    TextField,
+    Grid,
     Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalCloseButton,
-    ModalBody,
-    ModalFooter,
-    Input,
-    useDisclosure,
-    SimpleGrid,
     Card,
-    CardHeader,
-    CardBody,
-} from '@chakra-ui/react';
+    CardContent,
+    CardActions,
+    CircularProgress,
+    Container,
+} from '@mui/material';
 import { FaPlus, FaList, FaShareSquare } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../supabaseClient';
@@ -31,18 +22,31 @@ import type { List } from '../types'; // Importamos la interfaz List
 import { useNavigate } from 'react-router-dom';
 import ShareListModal from '../components/ShareListModal';
 import { processLock } from '@supabase/supabase-js';
+import toast from 'react-hot-toast';
+
+// Estilos para el Modal de MUI
+const modalStyle = {
+    position: 'absolute' as 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: { xs: '90%', sm: 400 },
+    bgcolor: 'background.paper',
+    borderRadius: 1,
+    boxShadow: 24,
+    p: 4,
+};
 
 const Dashboard: React.FC = () => {
-    const { user, signOut } = useAuth();
+    const { user } = useAuth();
     const [lists, setLists] = useState<List[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [newListName, setNewListName] = useState('');
     const [newListDescription, setNewListDescription] = useState('');
-    const toast = useToast();
     const navigate = useNavigate();
 
-    const { open: isOpen, onOpen, onClose } = useDisclosure(); // Usado para el modal de creación de lista
-    const { open: isShareOpen, onOpen: onShareOpen, onClose: onShareClose } = useDisclosure(); // <-- NUEVO: Para el modal de compartir
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    const [isCreationModalOpen, setIsCreationModalOpen] = useState(false);
     const [listToShare, setListToShare] = useState<List | null>(null); // <-- NUEVO: Almacena la lista a compartir
 
     // URL de la Edge Function (ajusta la ruta y el dominio de tu proyecto Supabase)
@@ -67,13 +71,7 @@ const Dashboard: React.FC = () => {
             // Casteamos el resultado a nuestro tipo List[]
             setLists(data as List[]);
         } catch (error: any) {
-            toast({
-                title: 'Error al cargar listas',
-                description: error.message || 'No se pudieron recuperar tus listas.',
-                status: 'error',
-                duration: 5000,
-                isClosable: true,
-            });
+            toast.error(`Error al cargar listas: ${error.message || 'No se pudieron recuperar tus listas.'}`);
         } finally {
             setIsLoading(false);
         }
@@ -85,12 +83,13 @@ const Dashboard: React.FC = () => {
 
     const handleShareClick = (list: List) => {
         setListToShare(list);
-        onShareOpen();
+        setIsShareModalOpen(true);
     };
+
     // --- Lógica de Creación de Lista ---
     const handleCreateList = async () => {
         if (!newListName.trim()) {
-            toast({ title: 'El nombre es obligatorio', status: 'warning' });
+            toast.error('El nombre es obligatorio');
             return;
         }
 
@@ -108,18 +107,13 @@ const Dashboard: React.FC = () => {
 
             if (error) throw error;
 
-            toast({
-                title: 'Lista creada con éxito',
-                status: 'success',
-                duration: 3000,
-                isClosable: true,
-            });
+            toast.success('Lista creada con éxito');
 
             // 2. Actualizar el estado y cerrar el modal
             if (data) {
                 setLists([data as List, ...lists]);
             }
-            onClose();
+            setIsShareModalOpen(false);
             setNewListName('');
             setNewListDescription('');
 
@@ -127,136 +121,149 @@ const Dashboard: React.FC = () => {
             navigate(`/list/${data?.id}/edit`);
 
         } catch (error: any) {
-            toast({
-                title: 'Error de creación',
-                description: error.message || 'No se pudo crear la lista.',
-                status: 'error',
-                duration: 5000,
-                isClosable: true,
-            });
+            toast.error(`Error de creación: ${error.message || 'No se pudo crear la lista.'}`);
         }
-    };
+    }
 
     // --- JSX de Componentes ---
 
     const ListCard: React.FC<{ list: List }> = ({ list }) => (
         <Card
-            w="100%"
-            minH="150px"
-            shadow="md"
-            _hover={{ shadow: 'lg', transform: 'translateY(-2px)' }}
-            transition="0.2s"
+            sx={{
+                width: '100%',
+                minHeight: '150px',
+                boxShadow: 3,
+                transition: '0.2s',
+                '&:hover': { boxShadow: 6, transform: 'translateY(-2px)' }
+            }}
         >
-            <CardHeader>
-                <Heading size="md">{list.name}</Heading>
-            </CardHeader>
-            <CardBody>
-                <Text noOfLines={2} color="gray.600" mb={4}>
+            <CardContent>
+                <Typography variant="h6" component="h3" mb={1} noWrap>
+                    {list.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" mb={2} noWrap sx={{ WebkitLineClamp: 2 }}>
                     {list.description || 'Sin descripción.'}
-                </Text>
-
-                <HStack spacing={2} pt={2}>
-                    <Button
-                        leftIcon={<FaList />}
-                        colorScheme="purple"
-                        size="sm"
-                        onClick={() => navigate(`/list/${list.id}/edit`)}
-                    >
-                        Editar Items
-                    </Button>
-                    <Button
-                        leftIcon={<FaShareSquare />}
-                        colorScheme="teal"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleShareClick(list)}
-                    >
-                        Compartir
-                    </Button>
-                </HStack>
-            </CardBody>
+                </Typography>
+            </CardContent>
+            <CardActions sx={{ justifyContent: 'flex-end', pb: 2, pr: 2 }}>
+                <Button
+                    size="small"
+                    startIcon={<FaList />}
+                    variant="outlined"
+                    onClick={() => navigate(`/list/${list.id}/edit`)}
+                >
+                    Editar Items
+                </Button>
+                <Button
+                    size="small"
+                    startIcon={<FaShareSquare />}
+                    variant="contained"
+                    color="secondary"
+                    onClick={() => handleShareClick(list)}
+                >
+                    Compartir
+                </Button>
+            </CardActions>
         </Card>
     );
 
     return (
-        <Box p={{ base: 4, md: 8 }} maxW="6xl" mx="auto">
-            <HStack mb={8} justify="space-between" wrap="wrap">
-                <Heading as="h1" size="xl">
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+            <Stack
+                direction={{ xs: 'column', md: 'row' }}
+                justifyContent="space-between"
+                alignItems={{ xs: 'flex-start', md: 'center' }}
+                mb={4}
+                spacing={2}
+            >
+                <Typography variant="h4" component="h1">
                     Mis Listas
-                </Heading>
-                {/* Movemos la creación de lista al mismo nivel del Heading o la mantenemos aquí */}
-                <Button leftIcon={<FaPlus />} colorScheme="purple" onClick={onOpen}>
+                </Typography>
+                <Button
+                    startIcon={<FaPlus />}
+                    variant="contained"
+                    color="primary"
+                    onClick={() => setIsCreationModalOpen(true)}
+                >
                     Crear Nueva Lista
                 </Button>
-            </HStack>
+            </Stack>
+
+            <Typography variant="h5" component="h2" mb={3}>
+                Listas Creadas ({lists.length})
+            </Typography>
 
             {/* Manejo de estados de carga y vacío */}
             {isLoading ? (
-                <Center h="200px">
-                    <Spinner size="xl" color="purple.500" />
-                </Center>
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                    <CircularProgress color="primary" />
+                </Box>
             ) : lists.length === 0 ? (
-                <Box textAlign="center" py={10} px={6} borderWidth={1} borderRadius="lg" bg="white">
-                    <Heading size="md" mb={2}>¡Aún no tienes listas!</Heading>
-                    <Text color={'gray.500'} mb={4}>
+                <Box sx={{ textAlign: 'center', py: 6, border: '1px dashed grey', borderRadius: 1, bgcolor: 'white' }}>
+                    <Typography variant="h6" mb={1}>¡Aún no tienes listas!</Typography>
+                    <Typography color="text.secondary" mb={2}>
                         Crea tu primera lista de regalos, deseos o tareas.
-                    </Text>
-                    <Button leftIcon={<FaPlus />} colorScheme="purple" onClick={onOpen}>
+                    </Typography>
+                    <Button startIcon={<FaPlus />} variant="contained" color="primary" onClick={() => setIsCreationModalOpen(true)}>
                         Crear Nueva Lista
                     </Button>
                 </Box>
             ) : (
                 // Renderizado de Listas
-                <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
+                <Grid container spacing={3}>
                     {lists.map(list => (
-                        <ListCard key={list.id} list={list} />
+                        <Grid item xs={12} sm={6} md={4} key={list.id}>
+                            <ListCard list={list} />
+                        </Grid>
                     ))}
-                </SimpleGrid>
+                </Grid>
             )}
 
-            {/* --- Modal de Creación de Lista --- */}
-            <Modal isOpen={isOpen} onClose={onClose}>
-                <ModalOverlay />
-                <ModalContent>
-                    <ModalHeader>Crear Nueva Lista</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                        <VStack spacing={4}>
-                            <Input
-                                placeholder="Nombre de la Lista (Ej: Regalos de Navidad)"
-                                value={newListName}
-                                onChange={(e) => setNewListName(e.target.value)}
-                                autoFocus
-                            />
-                            <Input
-                                placeholder="Descripción (Opcional)"
-                                value={newListDescription}
-                                onChange={(e) => setNewListDescription(e.target.value)}
-                            />
-                        </VStack>
-                    </ModalBody>
+            {/* --- Modal de Creación de Lista (MUI) --- */}
+            <Modal open={isCreationModalOpen} onClose={() => setIsCreationModalOpen(false)}>
+                <Box sx={modalStyle}>
+                    <Typography variant="h5" component="h2" mb={3}>
+                        Crear Nueva Lista
+                    </Typography>
+                    <Stack spacing={3}>
+                        <TextField
+                            label="Nombre de la Lista"
+                            fullWidth
+                            value={newListName}
+                            onChange={(e) => setNewListName(e.target.value)}
+                            autoFocus
+                        />
+                        <TextField
+                            label="Descripción (Opcional)"
+                            fullWidth
+                            multiline
+                            rows={2}
+                            value={newListDescription}
+                            onChange={(e) => setNewListDescription(e.target.value)}
+                        />
+                    </Stack>
 
-                    <ModalFooter>
-                        <Button variant="ghost" mr={3} onClick={onClose}>
+                    <Stack direction="row" spacing={2} justifyContent="flex-end" mt={4}>
+                        <Button variant="outlined" onClick={() => setIsCreationModalOpen(false)}>
                             Cancelar
                         </Button>
-                        <Button colorScheme="purple" onClick={handleCreateList} isLoading={isLoading}>
+                        <Button variant="contained" color="primary" onClick={handleCreateList} disabled={isLoading}>
                             Crear Lista
                         </Button>
-                    </ModalFooter>
-                </ModalContent>
+                    </Stack>
+                </Box>
             </Modal>
-            {/* --- Modal de Compartir Lista --- */}
+
+            {/* --- Modal de Compartir Lista (Componente Secundario) --- */}
             {listToShare && (
                 <ShareListModal
-                    isOpen={isShareOpen}
-                    onClose={onShareClose}
+                    isOpen={isShareModalOpen}
+                    onClose={() => setIsShareModalOpen(false)}
                     list={listToShare}
                     edgeFunctionUrl={EDGE_FUNCTION_URL}
                 />
             )}
-        </Box>
+        </Container>
     );
 };
-
 export default Dashboard;

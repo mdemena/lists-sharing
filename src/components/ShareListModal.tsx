@@ -3,23 +3,19 @@
 import React, { useState } from 'react';
 import {
     Modal,
-    ModalOverlay,
-    ModalContent,
-    ModalHeader,
-    ModalCloseButton,
-    ModalBody,
-    ModalFooter,
+    Box,
+    Typography,
     Button,
-    VStack,
-    Input,
-    Textarea,
-    useToast,
+    TextField,
+    TextareaAutosize, // Usamos TextareaAutosize para el campo de emails
     Alert,
-    AlertIcon,
-    Text,
-} from '@chakra-ui/react';
+    AlertTitle,
+    Stack,
+    Container,
+} from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
-import { List } from '../types';
+import type { List } from '../types';
+import toast from 'react-hot-toast';
 
 interface ShareModalProps {
     isOpen: boolean;
@@ -29,11 +25,23 @@ interface ShareModalProps {
     edgeFunctionUrl: string;
 }
 
+// Estilo simple para el contenido del modal (similar a ModalContent de Chakra)
+const modalStyle = {
+    position: 'absolute' as 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: { xs: 300, sm: 400, md: 500 },
+    bgcolor: 'background.paper',
+    borderRadius: 1,
+    boxShadow: 24,
+    p: 4,
+};
+
 const ShareListModal: React.FC<ShareModalProps> = ({ isOpen, onClose, list, edgeFunctionUrl }) => {
     const { user } = useAuth();
     const [emailsInput, setEmailsInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const toast = useToast();
 
     const handleShare = async () => {
         if (!user || !list) return;
@@ -45,7 +53,7 @@ const ShareListModal: React.FC<ShareModalProps> = ({ isOpen, onClose, list, edge
             .filter(email => email.length > 0 && email.includes('@')); // Filtrar emails válidos
 
         if (recipientEmails.length === 0) {
-            toast({ title: 'Introduce al menos una dirección de correo válida.', status: 'warning' });
+            toast.error('Introduce al menos una dirección de correo válida.');
             return;
         }
 
@@ -75,21 +83,12 @@ const ShareListModal: React.FC<ShareModalProps> = ({ isOpen, onClose, list, edge
             }
 
             // 2. Éxito
-            toast({
-                title: '¡Lista compartida!',
-                description: `Invitaciones enviadas a ${recipientEmails.length} personas.`,
-                status: 'success',
-            });
+            toast.success(`Invitaciones enviadas a ${recipientEmails.length} personas.`);
             onClose();
             setEmailsInput('');
 
         } catch (error: any) {
-            toast({
-                title: 'Error de envío',
-                description: error.message,
-                status: 'error',
-                duration: 8000,
-            });
+            toast.error(error.message || 'Error al enviar las invitaciones.');
         } finally {
             setIsLoading(false);
         }
@@ -98,40 +97,70 @@ const ShareListModal: React.FC<ShareModalProps> = ({ isOpen, onClose, list, edge
     const shareLink = `${window.location.origin}/share/${list.id}`;
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose}>
-            <ModalOverlay />
-            <ModalContent>
-                <ModalHeader>Compartir Lista: {list.name}</ModalHeader>
-                <ModalCloseButton />
-                <ModalBody>
-                    <VStack spacing={4}>
-                        <Alert status="info" borderRadius="md">
-                            <AlertIcon />
-                            <Text fontSize="sm">Los destinatarios recibirán un enlace de acceso para ver y adjudicar ítems (requiere registro/login).</Text>
-                        </Alert>
+        // Componente Modal de MUI usa 'open' en lugar de 'isOpen'
+        <Modal
+            open={isOpen}
+            onClose={onClose}
+            aria-labelledby="share-modal-title"
+            aria-describedby="share-modal-description"
+        >
+            {/* Box simula el contenido centralizado y estilizado */}
+            <Box sx={modalStyle}>
+                <Typography id="share-modal-title" variant="h6" component="h2" mb={2}>
+                    Compartir Lista: {list.name}
+                </Typography>
 
-                        <Textarea
-                            placeholder="Ingresa las direcciones de correo separadas por comas o saltos de línea (Ej: amigo1@mail.com, amigo2@mail.com)"
-                            value={emailsInput}
-                            onChange={(e) => setEmailsInput(e.target.value)}
-                            minH="150px"
-                        />
+                <Stack spacing={3}>
+                    {/* Alerta de información (Alert de MUI es estable) */}
+                    <Alert severity="info" icon={<FaInfoCircle size={20} />}>
+                        <AlertTitle>Privacidad</AlertTitle>
+                        Los destinatarios recibirán un enlace de acceso para ver y adjudicar ítems (requiere registro/login).
+                    </Alert>
 
-                        <Text fontSize="sm" color="gray.500" w="100%">
-                            O comparte el enlace directamente:
-                            <Input value={shareLink} isReadOnly size="sm" mt={1} onClick={(e) => (e.target as HTMLInputElement).select()} />
-                        </Text>
-                    </VStack>
-                </ModalBody>
-                <ModalFooter>
-                    <Button variant="ghost" mr={3} onClick={onClose}>
+                    <TextareaAutosize
+                        aria-label="Ingresa correos electrónicos"
+                        minRows={5}
+                        placeholder="Ingresa las direcciones de correo separadas por comas o saltos de línea (Ej: amigo1@mail.com, amigo2@mail.com)"
+                        value={emailsInput}
+                        onChange={(e) => setEmailsInput(e.target.value)}
+                        style={{
+                            width: '100%',
+                            padding: '8px',
+                            borderRadius: '4px',
+                            borderColor: '#ccc',
+                            fontFamily: 'Roboto, sans-serif'
+                        }}
+                    />
+
+                    <Typography variant="body2" color="text.secondary">
+                        O comparte el enlace directamente:
+                    </Typography>
+                    <TextField
+                        value={shareLink}
+                        fullWidth
+                        size="small"
+                        onClick={(e) => (e.target as HTMLInputElement).select()}
+                        InputProps={{
+                            readOnly: true,
+                        }}
+                    />
+                </Stack>
+
+                <Stack direction="row" spacing={2} justifyContent="flex-end" mt={4}>
+                    <Button onClick={onClose} variant="outlined">
                         Cancelar
                     </Button>
-                    <Button colorScheme="teal" onClick={handleShare} isLoading={isLoading}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleShare}
+                        disabled={isLoading}
+                        startIcon={<FaShareAlt />}
+                    >
                         Enviar Invitaciones
                     </Button>
-                </ModalFooter>
-            </ModalContent>
+                </Stack>
+            </Box>
         </Modal>
     );
 };

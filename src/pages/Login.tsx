@@ -1,29 +1,31 @@
 // frontend/src/pages/Login.tsx (Código completo adaptado)
 
 import React, { useState } from 'react';
-import {
-    Box,
-    Button,
-    Input,
-    VStack,
-    Heading,
-    Text,
-    useToast,
-    Divider,
-    Center, // Aseguramos que Center esté importado
-} from '@chakra-ui/react';
+import { Box, Button, TextField, Typography, Container, Divider, Stack } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { FaGoogle, FaGithub } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../supabaseClient'; // Necesario para el login social
+import toast from 'react-hot-toast';
+import SimpleDivider from '../components/SimpleDivider.tsx';
+
+// Creamos un contenedor centrado usando styled
+const CenteredContainer = styled(Container)(({ theme }) => ({
+    minHeight: 'calc(100vh - 64px)', // Ajuste de altura
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: theme.spacing(3),
+}));
 
 const Login: React.FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isRegister, setIsRegister] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+
     // @ts-ignore: Accedemos a los métodos del contexto
     const { signIn, signUp } = useAuth();
-    const toast = useToast();
 
     const handleAuth = async (event: React.FormEvent) => {
         event.preventDefault();
@@ -40,22 +42,12 @@ const Login: React.FC = () => {
 
             if (error) throw error;
 
-            toast({
-                title: isRegister ? '¡Registro Exitoso!' : '¡Bienvenido!',
-                description: isRegister ? 'Revisa tu correo para confirmar tu cuenta.' : 'Has iniciado sesión correctamente.',
-                status: 'success',
-                duration: 3000,
-                isClosable: true,
-            });
+            // ✅ SUSTITUCIÓN: Llamada directa a toast
+            toast.success(isRegister ? '¡Registro Exitoso! Revisa tu correo.' : '¡Bienvenido! Has iniciado sesión.', { duration: 4000 });
 
         } catch (error: any) {
-            toast({
-                title: 'Error de Autenticación',
-                description: error.message || 'Ocurrió un error inesperado.',
-                status: 'error',
-                duration: 5000,
-                isClosable: true,
-            });
+            // ✅ SUSTITUCIÓN: Llamada directa a toast
+            toast.error(`Error de Autenticación: ${error.message || 'Ocurrió un error inesperado.'}`);
         } finally {
             setIsLoading(false);
         }
@@ -72,81 +64,85 @@ const Login: React.FC = () => {
     };
 
     return (
-        // Centramos el contenido en la altura restante
-        <Center minH="calc(100vh - 64px)">
+        <CenteredContainer component="main" maxWidth="sm">
             <Box
-                maxW="sm"
-                p={8}
-                borderWidth={1}
-                borderRadius="lg"
-                bg="white"
-                boxShadow="md"
-                w="100%"
+                sx={{
+                    p: 4, // Padding
+                    border: '1px solid',
+                    borderColor: 'grey.300',
+                    borderRadius: 2,
+                    boxShadow: 3,
+                    bgcolor: 'white',
+                    width: '100%',
+                }}
             >
-                {/* Este heading se mantiene para dar contexto al formulario dentro del box */}
-                <Heading size="lg" mb={6} textAlign="center">
+                <Typography variant="h5" component="h1" align="center" mb={3}>
                     {isRegister ? 'Crear Cuenta' : 'Iniciar Sesión'}
-                </Heading>
+                </Typography>
 
                 <form onSubmit={handleAuth}>
-                    <VStack spacing={4}>
-                        <Input
-                            placeholder="Email"
+                    <Stack spacing={2} mb={3}>
+                        <TextField
+                            label="Email"
                             type="email"
+                            fullWidth
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
                         />
-                        <Input
-                            placeholder="Contraseña"
+                        <TextField
+                            label="Contraseña"
                             type="password"
+                            fullWidth
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
                         />
                         <Button
                             type="submit"
-                            colorScheme="purple"
-                            isFullWidth
-                            isLoading={isLoading}
+                            variant="contained"
+                            color="primary"
+                            fullWidth
+                            disabled={isLoading}
                         >
                             {isRegister ? 'Registrarse' : 'Iniciar Sesión'}
                         </Button>
-                    </VStack>
+                    </Stack>
                 </form>
 
-                <Text
+                <Typography
                     align="center"
-                    mt={4}
+                    mt={2}
+                    color="primary"
+                    sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
                     onClick={() => setIsRegister(!isRegister)}
-                    color="purple.500"
-                    cursor="pointer"
-                    _hover={{ textDecoration: 'underline' }}
                 >
                     {isRegister ? '¿Ya tienes una cuenta? Inicia Sesión' : '¿Necesitas una cuenta? Regístrate'}
-                </Text>
+                </Typography>
 
-                <Divider my={6} />
-                <VStack spacing={3}>
+                <Divider sx={{ my: 3 }} />
+
+                <Stack spacing={1}>
                     <Button
-                        leftIcon={<FaGoogle />}
-                        colorScheme="red"
-                        isFullWidth
+                        startIcon={<FaGoogle />}
+                        variant="outlined"
+                        fullWidth
                         onClick={() => handleSocialLogin('google')}
+                        sx={{ color: '#db4437', borderColor: '#db4437' }}
                     >
                         Continuar con Google
                     </Button>
                     <Button
-                        leftIcon={<FaGithub />}
-                        colorScheme="gray"
-                        isFullWidth
+                        startIcon={<FaGithub />}
+                        variant="outlined"
+                        fullWidth
                         onClick={() => handleSocialLogin('github')}
                     >
                         Continuar con GitHub
                     </Button>
-                </VStack>
+                </Stack>
             </Box>
-        </Center>
+        </CenteredContainer>
     );
 }
 
