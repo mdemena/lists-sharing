@@ -7,7 +7,7 @@ const BREVO_API_URL = 'https://api.brevo.com/v3/smtp/email';
 
 // Claves obtenidas de los secretos de Supabase
 const BREVO_API_KEY = Deno.env.get('BREVO_API_KEY');
-const CLIENT_URL = Deno.env.get('CLIENT_URL') || 'http://localhost:3000';
+const CLIENT_URL = Deno.env.get('CLIENT_URL') || 'https://lists-sharing.mdemena.com';
 const SENDER_EMAIL = Deno.env.get('SENDER_EMAIL') || 'it@mdemena.com'; // Definir un email de remitente verificado en Brevo
 
 serve(async (req) => {
