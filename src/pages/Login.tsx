@@ -63,7 +63,7 @@ const Login: React.FC = () => {
     };
 
     return (
-        <CenteredContainer component="main" maxWidth="sm">
+        <CenteredContainer maxWidth="sm">
             <Box
                 sx={{
                     p: 4, // Padding

@@ -21,7 +21,6 @@ import { supabase } from '../supabaseClient';
 import type { List } from '../types'; // Importamos la interfaz List
 import { useNavigate } from 'react-router-dom';
 import ShareListModal from '../components/ShareListModal';
-import { processLock } from '@supabase/supabase-js';
 import toast from 'react-hot-toast';
 
 // Estilos para el Modal de MUI
@@ -212,7 +211,7 @@ const Dashboard: React.FC = () => {
                 // Renderizado de Listas
                 <Grid container spacing={3}>
                     {lists.map(list => (
-                        <Grid item xs={12} sm={6} md={4} key={list.id}>
+                        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={list.id}>
                             <ListCard list={list} />
                         </Grid>
                     ))}

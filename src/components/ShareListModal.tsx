@@ -11,9 +11,10 @@ import {
     Alert,
     AlertTitle,
     Stack,
-    Container,
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../supabaseClient';
+import { FaInfoCircle, FaShareAlt } from 'react-icons/fa';
 import type { List } from '../types';
 import toast from 'react-hot-toast';
 

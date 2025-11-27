@@ -109,28 +109,28 @@ const Home: React.FC = () => {
                     ¿Por qué usar Lists Sharing?
                 </Typography>
                 <Grid container spacing={4} sx={{ alignItems: 'stretch', justifyContent: 'center' }}>
-                    <Grid xs={12} sm={6} md={3}>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <Feature
                             icon={FaGift}
                             title="Adjudicación Ciega"
                             text="Los invitados pueden reservar un ítem sin que el creador de la lista sepa quién lo reservó."
                         />
                     </Grid>
-                    <Grid xs={12} sm={6} md={3}>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <Feature
                             icon={FaShareAlt}
                             title="Compartir Fácil"
                             text="Envía invitaciones por email con enlaces personalizados a cualquier familiar o amigo."
                         />
                     </Grid>
-                    <Grid xs={12} sm={6} md={3}>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <Feature
                             icon={FaLock}
                             title="Restricciones Seguras"
                             text="El creador no puede eliminar ítems que ya han sido adjudicados por un invitado."
                         />
                     </Grid>
-                    <Grid xs={12} sm={6} md={3}>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                         <Feature
                             icon={FaUsers}
                             title="Colaboración Total"

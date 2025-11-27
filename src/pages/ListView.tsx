@@ -257,7 +257,8 @@ const ListView: React.FC = () => {
         };
 
         try {
-            let data, error;
+            let data: ListItem | null = null;
+            let error;
             if (isEditingItem && currentItem.id) {
                 // Actualizar
                 ({ data, error } = await supabase
@@ -356,7 +357,6 @@ const ListView: React.FC = () => {
     // --- Renderizado del Ítem ---
     const ItemCard: React.FC<{ item: ListItem }> = ({ item }) => {
         const isAdjudicatedByCurrentUser = item.adjudicated_by === user?.id;
-        const isAdjudicatedByOthers = item.is_adjudicated && item.adjudicated_by !== user?.id;
 
         const AdjudicationStatus = (
             <Box sx={{
@@ -487,7 +487,7 @@ const ListView: React.FC = () => {
 
             <Grid container spacing={3}>
                 {items.map(item => (
-                    <Grid item xs={12} sm={6} md={4} key={item.id}>
+                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.id}>
                         <ItemCard item={item} />
                     </Grid>
                 ))}

@@ -1,8 +1,8 @@
 // frontend/src/components/NavBar.tsx
 
 import React from 'react';
-import { AppBar, Toolbar, Typography, Button, Box, IconButton } from '@mui/material';
-import { FaSignOutAlt, FaListUl, FaHome } from 'react-icons/fa';
+import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
+import { FaSignOutAlt, FaListUl } from 'react-icons/fa';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
