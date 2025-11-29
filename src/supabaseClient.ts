@@ -10,7 +10,7 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 if (!supabaseUrl || !supabaseAnonKey) {
     // Lanza un error claro si falta alguna clave
     throw new Error(
-        "Missing Supabase configuration variables. Check your SUPABASE_URL and SUPABASE_ANON_KEY in .env file.",
+        "Missing Supabase configuration variables. Check your VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env file.",
     );
 }
 

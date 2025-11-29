@@ -11,7 +11,7 @@ const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
 const CLIENT_URL = Deno.env.get("CLIENT_URL") ||
     "https://lists-sharing.mdemena.com";
 const SENDER_EMAIL = Deno.env.get("SENDER_EMAIL") || "it@mdemena.com"; // Definir un email de remitente verificado en Brevo
-const SUPABASE_URL = Deno.env.get("VITE_SUPABASE_URL")!;
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 serve(async (req) => {
