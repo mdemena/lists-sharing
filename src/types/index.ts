@@ -8,6 +8,12 @@ export interface AppUser extends User {
     // Ejemplo: username?: string;
 }
 
+export interface Profile {
+    id: string;
+    date_of_birth: string | null;
+    updated_at: string;
+}
+
 // Interfaz para URLs generales (enlaces a tiendas, etc.)
 export interface ExternalUrl {
     url: string;

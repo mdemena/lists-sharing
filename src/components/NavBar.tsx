@@ -77,6 +77,13 @@ const NavBar: React.FC = () => {
               >
                 Mis Listas
               </Button>
+              <Button
+                component={RouterLink}
+                to="/profile"
+                color="primary"
+              >
+                Mi Perfil
+              </Button>
               {/* Botón Salir */}
               <Button
                 onClick={handleLogout}

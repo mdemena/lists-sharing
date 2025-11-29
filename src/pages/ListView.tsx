@@ -404,7 +404,7 @@ const ListView: React.FC = () => {
                 transition: '0.2s',
                 '&:hover': isOwnerMode ? { boxShadow: 6, transform: 'translateY(-2px)' } : {}
             }}
-            onClick={() => isOwnerMode && handleOpenModal(item)}
+                onClick={() => isOwnerMode && handleOpenModal(item)}
             >
                 {/* Carrusel de Imágenes */}
                 <ImageCarousel images={item.image_urls || []} />
@@ -431,22 +431,30 @@ const ListView: React.FC = () => {
                     </Stack>
 
                     {/* Enlaces Externos */}
-                    <Stack direction="row" spacing={1} overflow="auto" pb={1} sx={{ mt: 1 }}>
-                        {item.urls && item.urls.length > 0 && item.urls.map((extUrl, index) => (
-                            <Tooltip key={index} title={extUrl.label || "Enlace externo"}>
-                                <IconButton
-                                    size="small"
-                                    color="primary"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        window.open(extUrl.url, '_blank');
-                                    }}
-                                >
-                                    <FaExternalLinkAlt size={12} />
-                                </IconButton>
-                            </Tooltip>
-                        ))}
-                    </Stack>
+                    {item.urls && item.urls.length > 0 && (
+                        <Stack spacing={0.5} sx={{ mt: 2 }}>
+                            <Typography variant="caption" color="text.secondary" fontWeight="bold">
+                                Enlaces:
+                            </Typography>
+                            <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                                {item.urls.map((extUrl, index) => (
+                                    <Button
+                                        key={index}
+                                        size="small"
+                                        variant="outlined"
+                                        endIcon={<FaExternalLinkAlt size={10} />}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            window.open(extUrl.url, '_blank');
+                                        }}
+                                        sx={{ textTransform: 'none', fontSize: '0.75rem' }}
+                                    >
+                                        {extUrl.label || 'Ver enlace'}
+                                    </Button>
+                                ))}
+                            </Stack>
+                        </Stack>
+                    )}
 
                     {/* Acciones */}
                     <Stack direction="row" spacing={1} justifyContent="flex-end" pt={2}>
@@ -581,9 +589,34 @@ const ListView: React.FC = () => {
                                                 <Avatar src="/favicon.svg" variant="rounded" />
                                             )}
                                         </TableCell>
-                                        <TableCell>{item.name}</TableCell>
-                                        <TableCell sx={{ maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                            {item.description}
+                                        <TableCell>
+                                            <Box>
+                                                <Typography variant="body2" fontWeight="medium">
+                                                    {item.name}
+                                                </Typography>
+                                                {item.urls && item.urls.length > 0 && (
+                                                    <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5} mt={0.5}>
+                                                        {item.urls.map((extUrl, index) => (
+                                                            <Button
+                                                                key={index}
+                                                                size="small"
+                                                                variant="text"
+                                                                endIcon={<FaExternalLinkAlt size={8} />}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    window.open(extUrl.url, '_blank');
+                                                                }}
+                                                                sx={{ textTransform: 'none', fontSize: '0.7rem', minWidth: 'auto', p: 0.5 }}
+                                                            >
+                                                                {extUrl.label || 'Link'}
+                                                            </Button>
+                                                        ))}
+                                                    </Stack>
+                                                )}
+                                            </Box>
+                                        </TableCell>
+                                        <TableCell sx={{ maxWidth: 300, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            {item.description || '-'}
                                         </TableCell>
                                         <TableCell align="right">{priorities.find(p => p.id === item.importance)?.name || 'N/A'}</TableCell>
                                         <TableCell align="right">€{item.estimated_cost?.toFixed(2) || 'N/A'}</TableCell>

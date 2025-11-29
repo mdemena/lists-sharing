@@ -10,6 +10,7 @@ import Login from './pages/Login.tsx';
 import Dashboard from './pages/Dashboard.tsx';
 import ListView from './pages/ListView.tsx';
 import Home from './pages/Home.tsx';
+import Profile from './pages/Profile.tsx';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
         {/* Rutas Privadas: Protegidas */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/list/:listId/edit" element={<ListView />} />
         </Route>
 

@@ -80,6 +80,7 @@ export async function handler(req: IncomingMessage, res: ServerResponse) {
         // Obtener usuario del header de autorización
         const authHeader = req.headers.authorization;
         let userId: string | null = null;
+        let senderDisplayName: string = senderEmail; // Default to email if no display name
 
         if (authHeader && authHeader.startsWith('Bearer ')) {
             const token = authHeader.replace('Bearer ', '');
@@ -87,6 +88,8 @@ export async function handler(req: IncomingMessage, res: ServerResponse) {
                 const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
                 if (user && !error) {
                     userId = user.id;
+                    // Get display_name from user metadata
+                    senderDisplayName = user.user_metadata?.display_name || senderEmail;
                 }
             } catch (err) {
                 console.warn('Error validating token:', err);
@@ -118,7 +121,7 @@ export async function handler(req: IncomingMessage, res: ServerResponse) {
         const htmlContent = `
             <h1>¡Tienes una nueva invitación!</h1>
             <p>Hola,</p>
-            <p>${senderEmail} te ha invitado a ver y colaborar en la lista de: <strong>${listName}</strong>.</p>
+            <p>${senderDisplayName} te ha invitado a ver y colaborar en la lista de: <strong>${listName}</strong>.</p>
             <p>Haz clic en el enlace para acceder y adjudicar elementos. Deberás registrarte si no tienes cuenta.</p>
             <p><a href="${shareLink}" style="display: inline-block; padding: 12px 24px; background-color: #1976d2; color: white; text-decoration: none; border-radius: 4px; margin: 16px 0;">Ver la lista compartida aquí</a></p>
             <br/>
