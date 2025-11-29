@@ -1,14 +1,16 @@
 // frontend/src/components/NavBar.tsx
 
 import React from 'react';
-import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
-import { FaSignOutAlt, FaListUl } from 'react-icons/fa';
+import { AppBar, Toolbar, Typography, Button, Box, IconButton, Tooltip } from '@mui/material';
+import { FaSignOutAlt, FaListUl, FaMoon, FaSun } from 'react-icons/fa';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useThemeMode } from '../main';
 import toast from 'react-hot-toast';
 
 const NavBar: React.FC = () => {
   const { signOut, user } = useAuth();
+  const { mode, toggleTheme } = useThemeMode();
   const navigate = useNavigate();
 
 
@@ -47,7 +49,23 @@ const NavBar: React.FC = () => {
         </Typography>
 
         {/* Contenedor de Botones (Derecha) */}
-        <Box sx={{ display: 'flex', gap: 1 }}>
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          {/* Botón de Toggle de Modo Oscuro */}
+          <Tooltip title={mode === 'light' ? 'Activar modo oscuro' : 'Activar modo claro'}>
+            <IconButton
+              onClick={toggleTheme}
+              color="primary"
+              sx={{
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  transform: 'rotate(20deg) scale(1.1)',
+                }
+              }}
+            >
+              {mode === 'light' ? <FaMoon size={18} /> : <FaSun size={18} />}
+            </IconButton>
+          </Tooltip>
+
           {user && (
             <>
               {/* Botón Mis Listas */}

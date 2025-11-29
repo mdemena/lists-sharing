@@ -66,12 +66,15 @@ const Login: React.FC = () => {
         <CenteredContainer maxWidth="sm">
             <Box
                 sx={{
-                    p: 4, // Padding
+                    p: 4,
                     border: '1px solid',
-                    borderColor: 'grey.300',
-                    borderRadius: 2,
-                    boxShadow: 3,
-                    bgcolor: 'white',
+                    borderColor: 'divider', // Ahora se adapta al tema
+                    borderRadius: 3,
+                    boxShadow: (theme) => theme.palette.mode === 'light'
+                        ? '0 8px 32px rgba(0,0,0,0.08)'
+                        : '0 8px 32px rgba(0,0,0,0.4)',
+                    bgcolor: 'background.paper', // Ahora se adapta al tema
+                    backdropFilter: 'blur(16px)',
                     width: '100%',
                 }}
             >
@@ -127,7 +130,14 @@ const Login: React.FC = () => {
                         variant="outlined"
                         fullWidth
                         onClick={() => handleSocialLogin('google')}
-                        sx={{ color: '#db4437', borderColor: '#db4437' }}
+                        sx={{
+                            color: '#db4437',
+                            borderColor: '#db4437',
+                            '&:hover': {
+                                borderColor: '#c33d2e',
+                                bgcolor: 'rgba(219, 68, 55, 0.04)',
+                            }
+                        }}
                     >
                         Continuar con Google
                     </Button>
@@ -136,6 +146,14 @@ const Login: React.FC = () => {
                         variant="outlined"
                         fullWidth
                         onClick={() => handleSocialLogin('github')}
+                        sx={{
+                            borderColor: 'text.secondary',
+                            '&:hover': {
+                                bgcolor: (theme) => theme.palette.mode === 'light'
+                                    ? 'rgba(0, 0, 0, 0.04)'
+                                    : 'rgba(255, 255, 255, 0.08)',
+                            }
+                        }}
                     >
                         Continuar con GitHub
                     </Button>
