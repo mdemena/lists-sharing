@@ -369,7 +369,7 @@ const ListView: React.FC = () => {
     const ItemCard: React.FC<{ item: ListItem }> = ({ item }) => {
         const isAdjudicatedByCurrentUser = item.adjudicated_by === user?.id;
 
-        const AdjudicationStatus = (
+        const AdjudicationStatus = !isOwnerMode ? (
             <Box sx={{
                 bgcolor: item.is_adjudicated ? 'error.light' : 'success.light',
                 color: item.is_adjudicated ? 'error.dark' : 'success.dark',
@@ -380,14 +380,14 @@ const ListView: React.FC = () => {
             }}>
                 {item.is_adjudicated ? 'ADJUDICADO' : 'DISPONIBLE'}
             </Box>
-        );
+        ) : null;
 
         return (
             <Card sx={{
                 width: '100%',
                 minHeight: '250px',
                 boxShadow: 3,
-                borderLeft: `5px solid ${item.is_adjudicated ? 'red' : 'green'}`
+                borderLeft: !isOwnerMode ? `5px solid ${item.is_adjudicated ? 'red' : 'green'}` : undefined
             }}>
                 {/* Carrusel de Imágenes */}
                 <ImageCarousel images={item.image_urls || []} />
@@ -539,7 +539,7 @@ const ListView: React.FC = () => {
                                 <TableCell>Descripción</TableCell>
                                 <TableCell align="right">Importancia</TableCell>
                                 <TableCell align="right">Coste</TableCell>
-                                <TableCell align="center">Estado</TableCell>
+                                {!isOwnerMode && <TableCell align="center">Estado</TableCell>}
                                 <TableCell align="center">Acciones</TableCell>
                             </TableRow>
                         </TableHead>
@@ -564,19 +564,21 @@ const ListView: React.FC = () => {
                                         </TableCell>
                                         <TableCell align="right">{item.importance}</TableCell>
                                         <TableCell align="right">${item.estimated_cost?.toFixed(2) || 'N/A'}</TableCell>
-                                        <TableCell align="center">
-                                            <Box sx={{
-                                                bgcolor: item.is_adjudicated ? 'error.light' : 'success.light',
-                                                color: item.is_adjudicated ? 'error.dark' : 'success.dark',
-                                                p: 0.5,
-                                                borderRadius: 1,
-                                                fontWeight: 'bold',
-                                                fontSize: '0.8rem',
-                                                display: 'inline-block'
-                                            }}>
-                                                {item.is_adjudicated ? 'ADJUDICADO' : 'DISPONIBLE'}
-                                            </Box>
-                                        </TableCell>
+                                        {!isOwnerMode && (
+                                            <TableCell align="center">
+                                                <Box sx={{
+                                                    bgcolor: item.is_adjudicated ? 'error.light' : 'success.light',
+                                                    color: item.is_adjudicated ? 'error.dark' : 'success.dark',
+                                                    p: 0.5,
+                                                    borderRadius: 1,
+                                                    fontWeight: 'bold',
+                                                    fontSize: '0.8rem',
+                                                    display: 'inline-block'
+                                                }}>
+                                                    {item.is_adjudicated ? 'ADJUDICADO' : 'DISPONIBLE'}
+                                                </Box>
+                                            </TableCell>
+                                        )}
                                         <TableCell align="center">
                                             <Stack direction="row" spacing={1} justifyContent="center">
                                                 {isOwnerMode ? (
