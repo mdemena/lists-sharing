@@ -1,4 +1,5 @@
 # Stage 1: Build the React application
+ARG CACHE_BUST=$(date +%s)-$(git rev-parse --short HEAD)
 FROM node:20-alpine as build
 
 WORKDIR /app
