@@ -1,7 +1,7 @@
 // frontend/src/pages/Home.tsx
 
 import React from 'react';
-import { Box, Typography, Button, Container, Stack, Grid, Paper } from '@mui/material';
+import { Box, Typography, Button, Container, Stack, Paper } from '@mui/material';
 import { Link, Navigate } from 'react-router-dom';
 import { FaGift, FaShareAlt, FaLock, FaUsers } from 'react-icons/fa'; // Iconos representativos
 import { useAuth } from '../contexts/AuthContext'; // Para verificar si el usuario está logueado
@@ -108,36 +108,41 @@ const Home: React.FC = () => {
                 >
                     ¿Por qué usar Lists Sharing?
                 </Typography>
-                <Grid container spacing={4} sx={{ alignItems: 'stretch', justifyContent: 'center' }}>
-                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                <Stack
+                    direction={{ xs: 'column', md: 'row' }}
+                    spacing={4}
+                    justifyContent="center"
+                    alignItems="stretch"
+                >
+                    <Box flex={1}>
                         <Feature
                             icon={FaGift}
                             title="Adjudicación Ciega"
                             text="Los invitados pueden reservar un ítem sin que el creador de la lista sepa quién lo reservó."
                         />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                    </Box>
+                    <Box flex={1}>
                         <Feature
                             icon={FaShareAlt}
                             title="Compartir Fácil"
                             text="Envía invitaciones por email con enlaces personalizados a cualquier familiar o amigo."
                         />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                    </Box>
+                    <Box flex={1}>
                         <Feature
                             icon={FaLock}
                             title="Restricciones Seguras"
                             text="El creador no puede eliminar ítems que ya han sido adjudicados por un invitado."
                         />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                    </Box>
+                    <Box flex={1}>
                         <Feature
                             icon={FaUsers}
                             title="Colaboración Total"
                             text="Múltiples usuarios pueden ver el estado de la lista y evitar regalos duplicados."
                         />
-                    </Grid>
-                </Grid>
+                    </Box>
+                </Stack>
             </Container>
         </Box>
     );
