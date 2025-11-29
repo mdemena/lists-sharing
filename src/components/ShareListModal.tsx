@@ -27,8 +27,8 @@ interface ShareModalProps {
     isOpen: boolean;
     onClose: () => void;
     list: List;
-    // La URL de tu Edge Function
-    edgeFunctionUrl: string;
+    // La URL de la API del backend
+    backendApiUrl: string;
 }
 
 // Estilo simple para el contenido del modal (similar a ModalContent de Chakra)
@@ -46,7 +46,7 @@ const modalStyle = {
     overflowY: 'auto',
 };
 
-const ShareListModal: React.FC<ShareModalProps> = ({ isOpen, onClose, list, edgeFunctionUrl }) => {
+const ShareListModal: React.FC<ShareModalProps> = ({ isOpen, onClose, list, backendApiUrl }) => {
     const { user } = useAuth();
     const [emailsInput, setEmailsInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -87,13 +87,12 @@ const ShareListModal: React.FC<ShareModalProps> = ({ isOpen, onClose, list, edge
         setIsLoading(true);
 
         try {
-            // 1. Llamar a la Edge Function de Supabase
-            const response = await fetch(edgeFunctionUrl, {
+            // 1. Llamar a la API del backend
+            const response = await fetch(`${backendApiUrl}/api/share-list`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    // Incluir el token de autenticación (JWT) en la cabecera, aunque la función sea --no-verify-jwt, 
-                    // es buena práctica y si la función es protegida, es necesario.
+                    // Incluir el token de autenticación (JWT) en la cabecera
                     'Authorization': `Bearer ${await supabase.auth.getSession().then(s => s.data.session?.access_token)}`
                 },
                 body: JSON.stringify({

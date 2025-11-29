@@ -60,8 +60,8 @@ const Dashboard: React.FC = () => {
     const [isCreationModalOpen, setIsCreationModalOpen] = useState(false);
     const [listToShare, setListToShare] = useState<List | null>(null); // <-- NUEVO: Almacena la lista a compartir
 
-    // URL de la Edge Function (ajusta la ruta y el dominio de tu proyecto Supabase)
-    const EDGE_FUNCTION_URL = import.meta.env.VITE_SUPABASE_URL + '/functions/v1/share-list-email';
+    // URL de la API del backend (a través del proxy de Vite)
+    const BACKEND_API_URL = '';
     // --- Lógica de Carga de Datos ---
     const fetchUserLists = async () => {
         if (!user) return;
@@ -350,7 +350,7 @@ const Dashboard: React.FC = () => {
                     isOpen={isShareModalOpen}
                     onClose={() => setIsShareModalOpen(false)}
                     list={listToShare}
-                    edgeFunctionUrl={EDGE_FUNCTION_URL}
+                    backendApiUrl={BACKEND_API_URL}
                 />
             )}
         </Container>
