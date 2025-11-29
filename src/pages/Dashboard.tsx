@@ -14,8 +14,19 @@ import {
     CardActions,
     CircularProgress,
     Container,
+    ToggleButton,
+    ToggleButtonGroup,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    IconButton,
+    Tooltip,
 } from '@mui/material';
-import { FaPlus, FaList, FaShareSquare } from 'react-icons/fa';
+import { FaPlus, FaList, FaShareSquare, FaTh, FaEdit } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../supabaseClient';
 import type { List } from '../types'; // Importamos la interfaz List
@@ -43,6 +54,7 @@ const Dashboard: React.FC = () => {
     const [newListName, setNewListName] = useState('');
     const [newListDescription, setNewListDescription] = useState('');
     const navigate = useNavigate();
+    const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [isCreationModalOpen, setIsCreationModalOpen] = useState(false);
@@ -124,6 +136,15 @@ const Dashboard: React.FC = () => {
         }
     }
 
+    const handleViewModeChange = (
+        _event: React.MouseEvent<HTMLElement>,
+        newViewMode: 'grid' | 'table',
+    ) => {
+        if (newViewMode !== null) {
+            setViewMode(newViewMode);
+        }
+    };
+
     // --- JSX de Componentes ---
 
     const ListCard: React.FC<{ list: List }> = ({ list }) => (
@@ -188,9 +209,25 @@ const Dashboard: React.FC = () => {
                 </Button>
             </Stack>
 
-            <Typography variant="h5" component="h2" mb={3}>
-                Listas Creadas ({lists.length})
-            </Typography>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+                <Typography variant="h5" component="h2">
+                    Listas Creadas ({lists.length})
+                </Typography>
+                <ToggleButtonGroup
+                    value={viewMode}
+                    exclusive
+                    onChange={handleViewModeChange}
+                    aria-label="view mode"
+                    size="small"
+                >
+                    <ToggleButton value="grid" aria-label="grid view">
+                        <FaTh />
+                    </ToggleButton>
+                    <ToggleButton value="table" aria-label="table view">
+                        <FaList />
+                    </ToggleButton>
+                </ToggleButtonGroup>
+            </Stack>
 
             {/* Manejo de estados de carga y vacío */}
             {isLoading ? (
@@ -207,8 +244,8 @@ const Dashboard: React.FC = () => {
                         Crear Nueva Lista
                     </Button>
                 </Box>
-            ) : (
-                // Renderizado de Listas
+            ) : viewMode === 'grid' ? (
+                // Renderizado de Listas en Grid
                 <Grid container spacing={3}>
                     {lists.map(list => (
                         <Grid size={{ xs: 12, sm: 6, md: 4 }} key={list.id}>
@@ -216,6 +253,52 @@ const Dashboard: React.FC = () => {
                         </Grid>
                     ))}
                 </Grid>
+            ) : (
+                // Renderizado de Listas en Tabla
+                <TableContainer component={Paper}>
+                    <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Nombre</TableCell>
+                                <TableCell>Descripción</TableCell>
+                                <TableCell align="center">Compartido con</TableCell>
+                                <TableCell align="center">Acciones</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {lists.map((list) => (
+                                <TableRow
+                                    key={list.id}
+                                    sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                >
+                                    <TableCell component="th" scope="row">
+                                        {list.name}
+                                    </TableCell>
+                                    <TableCell sx={{ maxWidth: 300, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        {list.description || '-'}
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        {list.list_shares?.[0]?.count ? `${list.list_shares[0].count} usuarios` : '-'}
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        <Stack direction="row" spacing={1} justifyContent="center">
+                                            <Tooltip title="Editar Items">
+                                                <IconButton size="small" onClick={() => navigate(`/list/${list.id}/edit`)}>
+                                                    <FaEdit />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title="Compartir">
+                                                <IconButton size="small" color="secondary" onClick={() => handleShareClick(list)}>
+                                                    <FaShareSquare />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Stack>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
             )}
 
             {/* --- Modal de Creación de Lista (MUI) --- */}

@@ -129,7 +129,7 @@ const ListView: React.FC = () => {
     const [list, setList] = useState<List | null>(null);
     const [items, setItems] = useState<ListItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+    const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
 
     // Estado y Hooks para el Modal de Añadir/Editar Item
     const [modalOpen, setModalOpen] = useState(false);
