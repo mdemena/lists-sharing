@@ -154,8 +154,10 @@ const Dashboard: React.FC = () => {
                 minHeight: '150px',
                 boxShadow: 3,
                 transition: '0.2s',
+                cursor: 'pointer',
                 '&:hover': { boxShadow: 6, transform: 'translateY(-2px)' }
             }}
+            onClick={() => navigate(`/list/${list.id}/edit`)}
         >
             <CardContent>
                 <Typography variant="h6" component="h3" mb={1} noWrap>
@@ -170,7 +172,10 @@ const Dashboard: React.FC = () => {
                     size="small"
                     startIcon={<FaList />}
                     variant="outlined"
-                    onClick={() => navigate(`/list/${list.id}/edit`)}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/list/${list.id}/edit`);
+                    }}
                 >
                     Editar Items
                 </Button>
@@ -179,7 +184,10 @@ const Dashboard: React.FC = () => {
                     startIcon={<FaShareSquare />}
                     variant="contained"
                     color="secondary"
-                    onClick={() => handleShareClick(list)}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        handleShareClick(list);
+                    }}
                 >
                     Compartir {list.list_shares?.[0]?.count ? `(${list.list_shares[0].count})` : ''}
                 </Button>

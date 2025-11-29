@@ -32,7 +32,7 @@ import {
     Paper,
     Avatar,
 } from '@mui/material';
-import { FaTrash, FaEdit, FaCheck, FaTimes, FaPlus, FaDollarSign, FaStar, FaExternalLinkAlt, FaTh, FaList } from 'react-icons/fa';
+import { FaTrash, FaEdit, FaCheck, FaTimes, FaPlus, FaEuroSign, FaStar, FaExternalLinkAlt, FaTh, FaList } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../supabaseClient';
 import type { List, ListItem, ImageUrl, ExternalUrl } from '../types'; // Importamos los tipos
@@ -63,6 +63,12 @@ interface CurrentItemState {
     importance: number;
     estimated_cost: number;
 }
+
+const priorities = [
+    { id: 3, name: 'Importante' },
+    { id: 2, name: 'Normal' },
+    { id: 1, name: 'Opcional' },
+];
 
 // Componente pequeño para el carrusel (simplificado para MVP)
 const ImageCarousel: React.FC<{ images: ImageUrl[] }> = ({ images }) => {
@@ -100,14 +106,20 @@ const ImageCarousel: React.FC<{ images: ImageUrl[] }> = ({ images }) => {
                     </Typography>
                     <Button
                         size="small"
-                        onClick={() => setCurrentIndex((currentIndex - 1 + images.length) % images.length)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentIndex((currentIndex - 1 + images.length) % images.length);
+                        }}
                         sx={{ color: 'white' }}
                     >
                         &lt;
                     </Button>
                     <Button
                         size="small"
-                        onClick={() => setCurrentIndex((currentIndex + 1) % images.length)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentIndex((currentIndex + 1) % images.length);
+                        }}
                         sx={{ color: 'white' }}
                     >
                         &gt;
@@ -387,8 +399,13 @@ const ListView: React.FC = () => {
                 width: '100%',
                 minHeight: '250px',
                 boxShadow: 3,
-                borderLeft: !isOwnerMode ? `5px solid ${item.is_adjudicated ? 'red' : 'green'}` : undefined
-            }}>
+                borderLeft: !isOwnerMode ? `5px solid ${item.is_adjudicated ? 'red' : 'green'}` : undefined,
+                cursor: isOwnerMode ? 'pointer' : 'default',
+                transition: '0.2s',
+                '&:hover': isOwnerMode ? { boxShadow: 6, transform: 'translateY(-2px)' } : {}
+            }}
+            onClick={() => isOwnerMode && handleOpenModal(item)}
+            >
                 {/* Carrusel de Imágenes */}
                 <ImageCarousel images={item.image_urls || []} />
 
@@ -408,8 +425,8 @@ const ListView: React.FC = () => {
                             <Typography variant="caption">Imp: {item.importance}</Typography>
                         </Stack>
                         <Stack direction="row" alignItems="center" spacing={0.5}>
-                            <Box sx={{ color: 'success.main' }}><FaDollarSign size={14} /></Box>
-                            <Typography variant="caption">Coste Est.: ${item.estimated_cost?.toFixed(2) || 'N/A'}</Typography>
+                            <Box sx={{ color: 'success.main' }}><FaEuroSign size={14} /></Box>
+                            <Typography variant="caption">Coste Est.: €{item.estimated_cost?.toFixed(2) || 'N/A'}</Typography>
                         </Stack>
                     </Stack>
 
@@ -420,7 +437,10 @@ const ListView: React.FC = () => {
                                 <IconButton
                                     size="small"
                                     color="primary"
-                                    onClick={() => window.open(extUrl.url, '_blank')}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        window.open(extUrl.url, '_blank');
+                                    }}
                                 >
                                     <FaExternalLinkAlt size={12} />
                                 </IconButton>
@@ -432,11 +452,14 @@ const ListView: React.FC = () => {
                     <Stack direction="row" spacing={1} justifyContent="flex-end" pt={2}>
                         {isOwnerMode ? (
                             <>
-                                <Button size="small" variant="outlined" startIcon={<FaEdit />} onClick={() => handleOpenModal(item)}>Editar</Button>
+                                <Button size="small" variant="outlined" startIcon={<FaEdit />} onClick={(e) => { e.stopPropagation(); handleOpenModal(item); }}>Editar</Button>
                                 <IconButton
                                     size="small"
                                     color="error"
-                                    onClick={() => handleDeleteItem(item)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteItem(item);
+                                    }}
                                     disabled={item.is_adjudicated}
                                 >
                                     <FaTrash size={14} />
@@ -446,7 +469,7 @@ const ListView: React.FC = () => {
                             user && (
                                 <>
                                     {isAdjudicatedByCurrentUser ? (
-                                        <Button size="small" variant="contained" color="warning" startIcon={<FaTimes />} onClick={() => handleAdjudicate(item, false)}>
+                                        <Button size="small" variant="contained" color="warning" startIcon={<FaTimes />} onClick={(e) => { e.stopPropagation(); handleAdjudicate(item, false); }}>
                                             Soltar
                                         </Button>
                                     ) : item.is_adjudicated ? (
@@ -454,7 +477,7 @@ const ListView: React.FC = () => {
                                             Reservado
                                         </Button>
                                     ) : (
-                                        <Button size="small" variant="contained" color="success" startIcon={<FaCheck />} onClick={() => handleAdjudicate(item, true)}>
+                                        <Button size="small" variant="contained" color="success" startIcon={<FaCheck />} onClick={(e) => { e.stopPropagation(); handleAdjudicate(item, true); }}>
                                             Yo lo tomo
                                         </Button>
                                     )}
@@ -555,15 +578,15 @@ const ListView: React.FC = () => {
                                             {item.image_urls && item.image_urls.length > 0 ? (
                                                 <Avatar src={item.image_urls[0].url} variant="rounded" />
                                             ) : (
-                                                <Avatar variant="rounded">?</Avatar>
+                                                <Avatar src="/favicon.svg" variant="rounded" />
                                             )}
                                         </TableCell>
                                         <TableCell>{item.name}</TableCell>
                                         <TableCell sx={{ maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                             {item.description}
                                         </TableCell>
-                                        <TableCell align="right">{item.importance}</TableCell>
-                                        <TableCell align="right">${item.estimated_cost?.toFixed(2) || 'N/A'}</TableCell>
+                                        <TableCell align="right">{priorities.find(p => p.id === item.importance)?.name || 'N/A'}</TableCell>
+                                        <TableCell align="right">€{item.estimated_cost?.toFixed(2) || 'N/A'}</TableCell>
                                         {!isOwnerMode && (
                                             <TableCell align="center">
                                                 <Box sx={{
@@ -663,11 +686,11 @@ const ListView: React.FC = () => {
                                     value={currentItem.importance.toString()}
                                     onChange={(e) => setCurrentItem({ ...currentItem, importance: parseInt(e.target.value as string) })}
                                 >
-                                    {[5, 4, 3, 2, 1].map(n => <MenuItem key={n} value={n}>{n} - {n === 5 ? 'Máxima' : n === 1 ? 'Mínima' : ''}</MenuItem>)}
+                                    {priorities.map(n => <MenuItem key={n.id} value={n.id}>{n.id} - {n.name}</MenuItem>)}
                                 </Select>
                             </FormControl>
                             <TextField
-                                label="Coste Estimado ($)"
+                                label="Coste Estimado (€)"
                                 type="number"
                                 fullWidth
                                 value={currentItem.estimated_cost}

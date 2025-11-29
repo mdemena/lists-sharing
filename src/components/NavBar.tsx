@@ -25,16 +25,25 @@ const NavBar: React.FC = () => {
 
   return (
     // AppBar de MUI es la barra de navegación principal
-    <AppBar position="static" color="primary">
+    <AppBar position="sticky" elevation={0}>
       <Toolbar>
         {/* Título de la Aplicación */}
         <Typography
           variant="h6"
           component={RouterLink} // Usamos RouterLink para manejar la navegación interna
           to={user ? "/dashboard" : "/"}
-          sx={{ flexGrow: 1, textDecoration: 'none', color: 'inherit', fontWeight: 'bold' }}
+          sx={{
+            flexGrow: 1,
+            textDecoration: 'none',
+            color: 'primary.main', // Usamos el color primario para el logo
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
+          }}
         >
-          🎁 Lists Sharing
+          <img src="/favicon.svg" alt="Logo" style={{ width: 24, height: 24 }} />
+          Lists Sharing
         </Typography>
 
         {/* Contenedor de Botones (Derecha) */}
@@ -46,7 +55,7 @@ const NavBar: React.FC = () => {
                 component={RouterLink}
                 to="/dashboard"
                 startIcon={<FaListUl />}
-                color="inherit" // Hereda el color blanco de AppBar
+                color="primary" // Color primario (ahora el fondo es claro)
               >
                 Mis Listas
               </Button>
@@ -54,12 +63,9 @@ const NavBar: React.FC = () => {
               <Button
                 onClick={handleLogout}
                 startIcon={<FaSignOutAlt />}
-                variant="contained"
+                variant="outlined" // Outlined para ser menos agresivo que contained red
+                color="error"
                 size="small"
-                sx={{
-                  bgcolor: 'error.main', // Color rojo para el botón de salir
-                  '&:hover': { bgcolor: 'error.dark' }
-                }}
               >
                 Salir
               </Button>
@@ -72,10 +78,7 @@ const NavBar: React.FC = () => {
               to="/login"
               variant="contained"
               size="small"
-              sx={{
-                bgcolor: 'primary.light',
-                '&:hover': { bgcolor: 'primary.dark' }
-              }}
+              color="primary"
             >
               Iniciar Sesión
             </Button>
