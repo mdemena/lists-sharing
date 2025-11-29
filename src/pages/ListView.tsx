@@ -21,8 +21,18 @@ import {
     TextareaAutosize,
     InputLabel,
     FormControl,
+    ToggleButton,
+    ToggleButtonGroup,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    Avatar,
 } from '@mui/material';
-import { FaTrash, FaEdit, FaCheck, FaTimes, FaPlus, FaDollarSign, FaStar, FaExternalLinkAlt } from 'react-icons/fa';
+import { FaTrash, FaEdit, FaCheck, FaTimes, FaPlus, FaDollarSign, FaStar, FaExternalLinkAlt, FaTh, FaList } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../supabaseClient';
 import type { List, ListItem, ImageUrl, ExternalUrl } from '../types'; // Importamos los tipos
@@ -119,6 +129,7 @@ const ListView: React.FC = () => {
     const [list, setList] = useState<List | null>(null);
     const [items, setItems] = useState<ListItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
     // Estado y Hooks para el Modal de Añadir/Editar Item
     const [modalOpen, setModalOpen] = useState(false);
@@ -456,6 +467,15 @@ const ListView: React.FC = () => {
         );
     };
 
+    const handleViewModeChange = (
+        _event: React.MouseEvent<HTMLElement>,
+        newViewMode: 'grid' | 'table',
+    ) => {
+        if (newViewMode !== null) {
+            setViewMode(newViewMode);
+        }
+    };
+
     if (isLoading || !list) {
         return (
             <Box
@@ -474,7 +494,23 @@ const ListView: React.FC = () => {
     // --- Renderizado Principal ---
     return (
         <Box sx={{ p: { xs: 2, md: 4 }, maxWidth: 'lg', mx: 'auto' }}>
-            <Typography variant="h3" component="h1" mb={1}>{list.name}</Typography>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1}>
+                <Typography variant="h3" component="h1">{list.name}</Typography>
+                <ToggleButtonGroup
+                    value={viewMode}
+                    exclusive
+                    onChange={handleViewModeChange}
+                    aria-label="view mode"
+                    size="small"
+                >
+                    <ToggleButton value="grid" aria-label="grid view">
+                        <FaTh />
+                    </ToggleButton>
+                    <ToggleButton value="table" aria-label="table view">
+                        <FaList />
+                    </ToggleButton>
+                </ToggleButtonGroup>
+            </Stack>
             <Typography variant="h6" color="text.secondary" mb={4}>
                 {isOwnerMode ? `Modo Edición` : `Lista Compartida`}: {list.description}
             </Typography>
@@ -485,13 +521,109 @@ const ListView: React.FC = () => {
                 </Button>
             )}
 
-            <Grid container spacing={3}>
-                {items.map(item => (
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.id}>
-                        <ItemCard item={item} />
-                    </Grid>
-                ))}
-            </Grid>
+            {viewMode === 'grid' ? (
+                <Grid container spacing={3}>
+                    {items.map(item => (
+                        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={item.id}>
+                            <ItemCard item={item} />
+                        </Grid>
+                    ))}
+                </Grid>
+            ) : (
+                <TableContainer component={Paper}>
+                    <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Imagen</TableCell>
+                                <TableCell>Nombre</TableCell>
+                                <TableCell>Descripción</TableCell>
+                                <TableCell align="right">Importancia</TableCell>
+                                <TableCell align="right">Coste</TableCell>
+                                <TableCell align="center">Estado</TableCell>
+                                <TableCell align="center">Acciones</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {items.map((item) => {
+                                const isAdjudicatedByCurrentUser = item.adjudicated_by === user?.id;
+                                return (
+                                    <TableRow
+                                        key={item.id}
+                                        sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                                    >
+                                        <TableCell component="th" scope="row">
+                                            {item.image_urls && item.image_urls.length > 0 ? (
+                                                <Avatar src={item.image_urls[0].url} variant="rounded" />
+                                            ) : (
+                                                <Avatar variant="rounded">?</Avatar>
+                                            )}
+                                        </TableCell>
+                                        <TableCell>{item.name}</TableCell>
+                                        <TableCell sx={{ maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            {item.description}
+                                        </TableCell>
+                                        <TableCell align="right">{item.importance}</TableCell>
+                                        <TableCell align="right">${item.estimated_cost?.toFixed(2) || 'N/A'}</TableCell>
+                                        <TableCell align="center">
+                                            <Box sx={{
+                                                bgcolor: item.is_adjudicated ? 'error.light' : 'success.light',
+                                                color: item.is_adjudicated ? 'error.dark' : 'success.dark',
+                                                p: 0.5,
+                                                borderRadius: 1,
+                                                fontWeight: 'bold',
+                                                fontSize: '0.8rem',
+                                                display: 'inline-block'
+                                            }}>
+                                                {item.is_adjudicated ? 'ADJUDICADO' : 'DISPONIBLE'}
+                                            </Box>
+                                        </TableCell>
+                                        <TableCell align="center">
+                                            <Stack direction="row" spacing={1} justifyContent="center">
+                                                {isOwnerMode ? (
+                                                    <>
+                                                        <IconButton size="small" onClick={() => handleOpenModal(item)}>
+                                                            <FaEdit />
+                                                        </IconButton>
+                                                        <IconButton size="small" color="error" onClick={() => handleDeleteItem(item)} disabled={item.is_adjudicated}>
+                                                            <FaTrash />
+                                                        </IconButton>
+                                                    </>
+                                                ) : (
+                                                    user && (
+                                                        <>
+                                                            {isAdjudicatedByCurrentUser ? (
+                                                                <Tooltip title="Soltar">
+                                                                    <IconButton size="small" color="warning" onClick={() => handleAdjudicate(item, false)}>
+                                                                        <FaTimes />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            ) : item.is_adjudicated ? (
+                                                                <Tooltip title="Reservado">
+                                                                    <span>
+                                                                        <IconButton size="small" color="error" disabled>
+                                                                            <FaTimes />
+                                                                        </IconButton>
+                                                                    </span>
+                                                                </Tooltip>
+                                                            ) : (
+                                                                <Tooltip title="Yo lo tomo">
+                                                                    <IconButton size="small" color="success" onClick={() => handleAdjudicate(item, true)}>
+                                                                        <FaCheck />
+                                                                    </IconButton>
+                                                                </Tooltip>
+                                                            )}
+                                                        </>
+                                                    )
+                                                )}
+                                            </Stack>
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            )}
 
             {/* --- Modal de Añadir/Editar Ítem (MUI) --- */}
             <Modal open={modalOpen} onClose={handleClose}>
