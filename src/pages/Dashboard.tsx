@@ -49,7 +49,7 @@ const Dashboard: React.FC = () => {
     const [listToShare, setListToShare] = useState<List | null>(null); // <-- NUEVO: Almacena la lista a compartir
 
     // URL de la Edge Function (ajusta la ruta y el dominio de tu proyecto Supabase)
-    const EDGE_FUNCTION_URL = import.meta.env.SUPABASE_URL + '/functions/v1/share-list-email';
+    const EDGE_FUNCTION_URL = import.meta.env.VITE_SUPABASE_URL + '/functions/v1/share-list-email';
     // --- Lógica de Carga de Datos ---
     const fetchUserLists = async () => {
         if (!user) return;
