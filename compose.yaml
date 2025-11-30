@@ -1,0 +1,24 @@
+services:
+  # Frontend - React + Vite application
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+    ports:
+      - "8888:80"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    networks:
+      - lists-sharing-network
+  # Supabase Studio - Database management UI
+  # Note: For local Supabase development, you should use 'supabase start' command
+  # which will start all Supabase services (PostgreSQL, Auth, Storage, etc.)
+  # This compose file focuses on the frontend application deployment
+
+networks:
+  lists-sharing-network:
+    driver: bridge
