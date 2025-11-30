@@ -124,30 +124,39 @@ const Login: React.FC = () => {
 
                 <Divider sx={{ my: 3 }} />
 
-                <Stack spacing={1}>
+                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
                     <Button
-                        startIcon={<FaGoogle />}
                         variant="outlined"
-                        fullWidth
                         onClick={() => handleSocialLogin('google')}
                         sx={{
                             color: '#db4437',
                             borderColor: '#db4437',
+                            minWidth: 'auto',
+                            px: 3,
+                            py: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
                             '&:hover': {
                                 borderColor: '#c33d2e',
                                 bgcolor: 'rgba(219, 68, 55, 0.04)',
                             }
                         }}
                     >
-                        Continuar con Google
+                        <FaGoogle size={20} />
+                        <Typography variant="body2" component="span">Google</Typography>
                     </Button>
                     <Button
-                        startIcon={<FaGithub />}
                         variant="outlined"
-                        fullWidth
                         onClick={() => handleSocialLogin('github')}
                         sx={{
                             borderColor: 'text.secondary',
+                            minWidth: 'auto',
+                            px: 3,
+                            py: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
                             '&:hover': {
                                 bgcolor: (theme) => theme.palette.mode === 'light'
                                     ? 'rgba(0, 0, 0, 0.04)'
@@ -155,9 +164,10 @@ const Login: React.FC = () => {
                             }
                         }}
                     >
-                        Continuar con GitHub
+                        <FaGithub size={20} />
+                        <Typography variant="body2" component="span">GitHub</Typography>
                     </Button>
-                </Stack>
+                </Box>
             </Box>
         </CenteredContainer>
     );
