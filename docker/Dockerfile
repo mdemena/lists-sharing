@@ -4,6 +4,14 @@ FROM node:20-alpine as build
 
 WORKDIR /app
 
+# 1) Definir args para las VITE_*
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+
+# 2) Promocionarlas a ENV (lo que lee Vite)
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+
 COPY package*.json ./
 RUN npm ci
 
