@@ -16,10 +16,12 @@ import {
     ListItemText,
     ListItemIcon,
     Divider,
+    IconButton,
+    Tooltip,
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api';
-import { FaInfoCircle, FaShareAlt, FaUserCheck, FaUserClock } from 'react-icons/fa';
+import { FaInfoCircle, FaShareAlt, FaUserCheck, FaUserClock, FaCopy } from 'react-icons/fa';
 import type { List, SharedUser } from '../types';
 import toast from 'react-hot-toast';
 
@@ -104,6 +106,14 @@ const ShareListModal: React.FC<ShareModalProps> = ({ isOpen, onClose, list }) =>
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleCopyLink = () => {
+        navigator.clipboard.writeText(shareLink).then(() => {
+            toast.success('Enlace copiado al portapapeles');
+        }).catch(() => {
+            toast.error('Error al copiar el enlace');
+        });
     };
 
     const shareLink = `${window.location.origin}/share/${list.id}`;
@@ -201,6 +211,13 @@ const ShareListModal: React.FC<ShareModalProps> = ({ isOpen, onClose, list }) =>
                         onClick={(e) => (e.target as HTMLInputElement).select()}
                         InputProps={{
                             readOnly: true,
+                            endAdornment: (
+                                <Tooltip title="Copiar enlace">
+                                    <IconButton onClick={handleCopyLink} edge="end" size="small">
+                                        <FaCopy />
+                                    </IconButton>
+                                </Tooltip>
+                            ),
                         }}
                     />
                 </Stack>

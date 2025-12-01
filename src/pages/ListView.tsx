@@ -189,19 +189,26 @@ const ListView: React.FC = () => {
         }
     };
 
+    // Fetch list data when listId or user changes
     useEffect(() => {
         fetchListData();
-        // Show auth dialog if not authenticated and in shared mode
+    }, [listId, user]);
+
+    // Show auth dialog if not authenticated and in shared mode
+    useEffect(() => {
         if (!user && !isOwnerMode && !isLoading) {
             setShowAuthDialog(true);
         }
-        // Auto-register user to shared list if authenticated
+    }, [user, isOwnerMode, isLoading]);
+
+    // Auto-register user to shared list if authenticated (only once)
+    useEffect(() => {
         if (user && !isOwnerMode && listId && !isLoading) {
             api.lists.registerUserToList(listId).catch((error) => {
                 console.error('Error registering user to list:', error);
             });
         }
-    }, [listId, user, isOwnerMode, isLoading]);
+    }, [user, listId, isOwnerMode]); // Removed isLoading to prevent re-registration
 
     const handleAuthDialogLogin = () => {
         // Save current URL for redirect after login
