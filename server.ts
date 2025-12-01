@@ -48,7 +48,7 @@ app.use("/api", async (req, res) => {
 
 // Catch-all handler for any request that doesn't match the above
 // Send back React's index.html file.
-app.get("*", (req, res) => {
+app.get("/*", (req, res) => {
     res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
