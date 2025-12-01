@@ -262,7 +262,7 @@ const Dashboard: React.FC = () => {
                     <CircularProgress color="primary" />
                 </Box>
             ) : (activeTab === 0 ? lists : sharedLists).length === 0 ? (
-                <Box sx={{ textAlign: 'center', py: 6, border: '1px dashed grey', borderRadius: 1, bgcolor: 'white' }}>
+                <Box sx={{ textAlign: 'center', py: 6, border: 1, borderColor: 'divider', borderStyle: 'dashed', borderRadius: 1, bgcolor: 'background.paper' }}>
                     <Typography variant="h6" mb={1}>
                         {activeTab === 0 ? '¡Aún no tienes listas!' : '¡No tienes listas compartidas!'}
                     </Typography>

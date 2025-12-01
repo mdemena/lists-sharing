@@ -31,6 +31,8 @@ import {
     TableRow,
     Paper,
     Avatar,
+    useTheme,
+    alpha,
 } from '@mui/material';
 import { FaTrash, FaEdit, FaCheck, FaTimes, FaPlus, FaEuroSign, FaStar, FaExternalLinkAlt, FaTh, FaList } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
@@ -93,7 +95,7 @@ const ImageCarousel: React.FC<{ images: ImageUrl[] }> = ({ images }) => {
                     position="absolute"
                     bottom={8}
                     right={8}
-                    sx={{ bgcolor: 'black.main', borderRadius: 1 }}
+                    sx={{ bgcolor: 'rgba(0, 0, 0, 0.7)', borderRadius: 1 }}
                 >
                     <Typography
                         variant="caption"
@@ -135,6 +137,7 @@ const ListView: React.FC = () => {
     const { listId } = useParams<{ listId: string }>();
     const location = useLocation();
     const navigate = useNavigate();
+    const theme = useTheme();
     // Determina si estamos en modo edición (ruta /list/:id/edit) o compartido (ruta /share/:id)
     const isOwnerMode = location.pathname.includes('/edit');
 
@@ -401,8 +404,16 @@ const ListView: React.FC = () => {
 
         const AdjudicationStatus = !isOwnerMode ? (
             <Box sx={{
-                bgcolor: item.is_adjudicated ? 'error.light' : 'success.light',
-                color: item.is_adjudicated ? 'error.dark' : 'success.dark',
+                bgcolor: item.is_adjudicated 
+                    ? alpha(theme.palette.error.main, 0.1) 
+                    : alpha(theme.palette.success.main, 0.1),
+                color: item.is_adjudicated 
+                    ? theme.palette.error.main 
+                    : theme.palette.success.main,
+                border: '1px solid',
+                borderColor: item.is_adjudicated 
+                    ? alpha(theme.palette.error.main, 0.3) 
+                    : alpha(theme.palette.success.main, 0.3),
                 p: 0.5,
                 borderRadius: 1,
                 fontWeight: 'bold',
@@ -439,7 +450,7 @@ const ListView: React.FC = () => {
 
                     <Stack direction="row" spacing={2} alignItems="center" fontSize="small" mb={2}>
                         <Stack direction="row" alignItems="center" spacing={0.5}>
-                            <Box sx={{ color: 'gold' }}><FaStar size={14} /></Box>
+                            <Box sx={{ color: 'warning.main' }}><FaStar size={14} /></Box>
                             <Typography variant="caption">Imp: {item.importance}</Typography>
                         </Stack>
                         <Stack direction="row" alignItems="center" spacing={0.5}>
@@ -686,8 +697,16 @@ const ListView: React.FC = () => {
                                         {!isOwnerMode && (
                                             <TableCell align="center">
                                                 <Box sx={{
-                                                    bgcolor: item.is_adjudicated ? 'error.light' : 'success.light',
-                                                    color: item.is_adjudicated ? 'error.dark' : 'success.dark',
+                                                    bgcolor: item.is_adjudicated 
+                                                        ? alpha(theme.palette.error.main, 0.1) 
+                                                        : alpha(theme.palette.success.main, 0.1),
+                                                    color: item.is_adjudicated 
+                                                        ? theme.palette.error.main 
+                                                        : theme.palette.success.main,
+                                                    border: '1px solid',
+                                                    borderColor: item.is_adjudicated 
+                                                        ? alpha(theme.palette.error.main, 0.3) 
+                                                        : alpha(theme.palette.success.main, 0.3),
                                                     p: 0.5,
                                                     borderRadius: 1,
                                                     fontWeight: 'bold',
