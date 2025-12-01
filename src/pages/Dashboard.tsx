@@ -174,7 +174,7 @@ const Dashboard: React.FC = () => {
                                 navigate(`/list/${list.id}/edit`);
                             }}
                         >
-                            Editar Items
+                            Editar Lista
                         </Button>
                         <Button
                             size="small"
