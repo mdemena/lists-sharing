@@ -43,21 +43,56 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     useEffect(() => {
         const initSession = async () => {
-            const { data: { session: currentSession } } = await api.auth.getSession();
-            if (currentSession?.access_token) {
-                 // If we have a token, try to get the user details
-                 const { data: { user: currentUser }, error } = await api.auth.getUser();
-                 if (!error && currentUser) {
-                     setSession({ ...currentSession, user: currentUser } as Session);
-                     setUser(currentUser as AppUser);
-                 } else {
-                     // Invalid token or error
-                     setSession(null);
-                     setUser(null);
-                 }
+            // First, check if we're coming back from an OAuth redirect
+            // Supabase sends tokens in the URL hash like: #access_token=...&refresh_token=...
+            const hashParams = new URLSearchParams(window.location.hash.substring(1));
+            const accessToken = hashParams.get('access_token');
+            const refreshToken = hashParams.get('refresh_token');
+            
+            if (accessToken) {
+                // We have tokens from OAuth callback
+                // Store them in localStorage
+                localStorage.setItem('sb-access-token', accessToken);
+                if (refreshToken) {
+                    localStorage.setItem('sb-refresh-token', refreshToken);
+                }
+                
+                // Clean up the URL hash
+                window.history.replaceState(null, '', window.location.pathname);
+                
+                // Get user details with the new token
+                const { data: { user: currentUser }, error } = await api.auth.getUser();
+                if (!error && currentUser) {
+                    const newSession = {
+                        access_token: accessToken,
+                        refresh_token: refreshToken,
+                        user: currentUser
+                    } as Session;
+                    setSession(newSession);
+                    setUser(currentUser as AppUser);
+                } else {
+                    console.error('Error getting user after OAuth:', error);
+                    setSession(null);
+                    setUser(null);
+                }
             } else {
-                setSession(null);
-                setUser(null);
+                // No OAuth tokens in URL, check localStorage for existing session
+                const { data: { session: currentSession } } = await api.auth.getSession();
+                if (currentSession?.access_token) {
+                     // If we have a token, try to get the user details
+                     const { data: { user: currentUser }, error } = await api.auth.getUser();
+                     if (!error && currentUser) {
+                         setSession({ ...currentSession, user: currentUser } as Session);
+                         setUser(currentUser as AppUser);
+                     } else {
+                         // Invalid token or error
+                         setSession(null);
+                         setUser(null);
+                     }
+                } else {
+                    setSession(null);
+                    setUser(null);
+                }
             }
             setLoading(false);
         };
