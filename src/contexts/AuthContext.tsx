@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { type Session, AuthError, type SignInWithPasswordCredentials, type SignUpWithPasswordCredentials } from '@supabase/supabase-js';
-import { supabase } from '../supabaseClient.ts';
+import { api } from '../api';
 import type { AppUser } from '../types'; // Importamos el tipo AppUser
 
 // 1. Definir la interfaz del valor que provee el Context
@@ -38,42 +38,57 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [session, setSession] = useState<Session | null>(null);
+    const [user, setUser] = useState<AppUser | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // La función `supabase.auth.getSession()` devuelve Session | null
-        supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-            setSession(currentSession);
-            setLoading(false);
-        });
-
-        // Suscribirse a los cambios de Auth
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            (_event, currentSession) => {
-                setSession(currentSession);
+        const initSession = async () => {
+            const { data: { session: currentSession } } = await api.auth.getSession();
+            if (currentSession?.access_token) {
+                 // If we have a token, try to get the user details
+                 const { data: { user: currentUser }, error } = await api.auth.getUser();
+                 if (!error && currentUser) {
+                     setSession({ ...currentSession, user: currentUser } as Session);
+                     setUser(currentUser as AppUser);
+                 } else {
+                     // Invalid token or error
+                     setSession(null);
+                     setUser(null);
+                 }
+            } else {
+                setSession(null);
+                setUser(null);
             }
-        );
-
-        return () => {
-            subscription.unsubscribe();
+            setLoading(false);
         };
+        initSession();
     }, []);
 
     const value: AuthContextType = {
         session,
-        user: session?.user as AppUser | null, // Casteamos el tipo de usuario
+        user,
         loading,
         signUp: async (data) => {
-            const { error } = await supabase.auth.signUp(data);
-            return { error };
+            const { data: result, error } = await api.auth.signUp(data);
+            if (result.session) {
+                setSession(result.session);
+                setUser(result.user as AppUser);
+            }
+            return { error: error ? { message: error } as AuthError : null };
         },
         signIn: async (data) => {
-            const { error } = await supabase.auth.signInWithPassword(data);
-            return { error };
+            const { data: result, error } = await api.auth.signInWithPassword(data);
+            if (result.session) {
+                setSession(result.session);
+                setUser(result.user as AppUser);
+            }
+            return { error: error ? { message: error } as AuthError : null };
         },
         signOut: async () => {
-            const { error } = await supabase.auth.signOut();
-            return { error };
+            const { error } = await api.auth.signOut();
+            setSession(null);
+            setUser(null);
+            return { error: error ? { message: error } as AuthError : null };
         },
     };
 

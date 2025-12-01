@@ -34,7 +34,7 @@ import {
 } from '@mui/material';
 import { FaTrash, FaEdit, FaCheck, FaTimes, FaPlus, FaEuroSign, FaStar, FaExternalLinkAlt, FaTh, FaList } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../supabaseClient';
+import { api } from '../api';
 import type { List, ListItem, ImageUrl, ExternalUrl } from '../types'; // Importamos los tipos
 import toast from 'react-hot-toast';
 
@@ -165,30 +165,23 @@ const ListView: React.FC = () => {
 
         try {
             // 1. Obtener la información de la lista
-            const { data: listData, error: listError } = await supabase
-                .from('lists')
-                .select('*')
-                .eq('id', listId)
-                .single();
+            const { data: listData, error: listError } = await api.lists.get(listId);
 
-            if (listError) throw listError;
+            if (listError) throw new Error(listError);
             setList(listData as List);
 
             // 2. Obtener los ítems de la lista
-            const { data: itemsData, error: itemsError } = await supabase
-                .from('list_items')
-                .select('*')
-                .eq('list_id', listId)
-                .order('importance', { ascending: false });
+            const { data: itemsData, error: itemsError } = await api.items.list(listId);
 
-            if (itemsError) throw itemsError;
+            if (itemsError) throw new Error(itemsError);
             setItems(itemsData as ListItem[]);
 
         } catch (error: any) {
             toast.error('No se pudo cargar la lista o sus ítems.');
             console.error(error);
             // Si la lista no existe o no tiene acceso, redirigir al dashboard
-            if (error.code === 'PGRST116') navigate('/dashboard');
+            // Note: API might return 404 or 500, we handle generic error here
+            if (error.message?.includes('not found')) navigate('/dashboard');
         } finally {
             setIsLoading(false);
         }
@@ -284,25 +277,20 @@ const ListView: React.FC = () => {
             let error;
             if (isEditingItem && currentItem.id) {
                 // Actualizar
-                ({ data, error } = await supabase
-                    .from('list_items')
-                    .update(itemData)
-                    .eq('id', currentItem.id)
-                    .select()
-                    .single());
+                const result = await api.items.update(currentItem.id, itemData);
+                data = result.data as ListItem;
+                error = result.error;
 
-                if (error) throw error;
+                if (error) throw new Error(error);
                 setItems(items.map(item => (item.id === currentItem.id ? data as ListItem : item)));
 
             } else {
                 // Insertar
-                ({ data, error } = await supabase
-                    .from('list_items')
-                    .insert(itemData)
-                    .select()
-                    .single());
+                const result = await api.items.create(itemData);
+                data = result.data as ListItem;
+                error = result.error;
 
-                if (error) throw error;
+                if (error) throw new Error(error);
                 setItems([...items, data as ListItem]);
             }
 
@@ -323,12 +311,9 @@ const ListView: React.FC = () => {
         if (!window.confirm(`¿Estás seguro de que quieres eliminar "${item.name}"?`)) return;
 
         try {
-            const { error } = await supabase
-                .from('list_items')
-                .delete()
-                .eq('id', item.id);
+            const { error } = await api.items.delete(item.id);
 
-            if (error) throw error;
+            if (error) throw new Error(error);
 
             setItems(items.filter(i => i.id !== item.id));
             toast.success('Ítem eliminado.');
@@ -360,14 +345,11 @@ const ListView: React.FC = () => {
         };
 
         try {
-            const { data, error } = await supabase
-                .from('list_items')
-                .update(updateData)
-                .eq('id', item.id)
-                .select()
-                .single();
+            const result = await api.items.update(item.id, updateData);
+            const data = result.data;
+            const error = result.error;
 
-            if (error) throw error;
+            if (error) throw new Error(error);
 
             setItems(items.map(i => (i.id === item.id ? data as ListItem : i)));
             toast(adjudicate ? '¡Adjudicado!' : 'Liberado.');

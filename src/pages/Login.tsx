@@ -5,7 +5,7 @@ import { Box, Button, TextField, Typography, Container, Divider, Stack } from '@
 import { styled } from '@mui/material/styles';
 import { FaGoogle, FaGithub } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../supabaseClient'; // Necesario para el login social
+import { api } from '../api'; // Necesario para el login social
 import toast from 'react-hot-toast';
 
 // Creamos un contenedor centrado usando styled
@@ -54,12 +54,18 @@ const Login: React.FC = () => {
 
     const handleSocialLogin = async (provider: 'google' | 'github') => {
         // ... (Lógica de login social idéntica a la versión anterior)
-        await supabase.auth.signInWithOAuth({
-            provider: provider,
-            options: {
-                redirectTo: `${window.location.origin}/dashboard`,
-            },
+        const { data, error } = await api.auth.signInWithOAuth(provider, {
+             redirectTo: `${window.location.origin}/dashboard`,
         });
+        
+        if (error) {
+            toast.error(`Error de login social: ${error}`);
+            return;
+        }
+        
+        if (data?.url) {
+            window.location.href = data.url;
+        }
     };
 
     return (

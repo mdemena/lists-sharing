@@ -28,7 +28,7 @@ import {
 } from '@mui/material';
 import { FaPlus, FaList, FaShareSquare, FaTh, FaEdit } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../supabaseClient';
+import { api } from '../api';
 import type { List } from '../types'; // Importamos la interfaz List
 import { useNavigate } from 'react-router-dom';
 import ShareListModal from '../components/ShareListModal';
@@ -61,23 +61,16 @@ const Dashboard: React.FC = () => {
     const [listToShare, setListToShare] = useState<List | null>(null); // <-- NUEVO: Almacena la lista a compartir
 
     // URL de la API del backend (a través del proxy de Vite)
-    const BACKEND_API_URL = '';
+    // const BACKEND_API_URL = '';
     // --- Lógica de Carga de Datos ---
     const fetchUserLists = async () => {
         if (!user) return;
         setIsLoading(true);
 
         try {
-            // 1. Acceder a la tabla 'lists' y seleccionar todos los campos
-            // 2. Filtrar por el 'owner_id' que coincide con el ID del usuario actual (user.id)
-            //    Supabase y RLS se encargan de esto, pero la cláusula 'eq' es explícita.
-            const { data, error } = await supabase
-                .from('lists')
-                .select('*, list_shares(count)')
-                .eq('owner_id', user.id)
-                .order('created_at', { ascending: false });
+            const { data, error } = await api.lists.list();
 
-            if (error) throw error;
+            if (error) throw new Error(error);
 
             // Casteamos el resultado a nuestro tipo List[]
             setLists(data as List[]);
@@ -105,18 +98,12 @@ const Dashboard: React.FC = () => {
         }
 
         try {
-            // 1. Insertar la nueva lista. El 'owner_id' se obtiene del usuario actual.
-            const { data, error } = await supabase
-                .from('lists')
-                .insert({
-                    name: newListName.trim(),
-                    description: newListDescription.trim(),
-                    owner_id: user?.id
-                })
-                .select() // Pide que devuelva la lista creada
-                .single(); // Espera un solo registro devuelto
+            const { data, error } = await api.lists.create({
+                name: newListName.trim(),
+                description: newListDescription.trim(),
+            });
 
-            if (error) throw error;
+            if (error) throw new Error(error);
 
             toast.success('Lista creada con éxito');
 
@@ -350,7 +337,6 @@ const Dashboard: React.FC = () => {
                     isOpen={isShareModalOpen}
                     onClose={() => setIsShareModalOpen(false)}
                     list={listToShare}
-                    backendApiUrl={BACKEND_API_URL}
                 />
             )}
         </Container>

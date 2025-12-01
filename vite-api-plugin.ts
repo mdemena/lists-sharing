@@ -2,6 +2,10 @@
 import type { Plugin } from "vite";
 import type { IncomingMessage, ServerResponse } from "http";
 import { handler as shareListHandler } from "./api/share-list";
+import { handler as authHandler } from "./api/auth";
+import { handler as listsHandler } from "./api/lists";
+import { handler as itemsHandler } from "./api/items";
+import { handler as profilesHandler } from "./api/profiles";
 import { loadEnv } from "vite";
 
 export function apiPlugin(): Plugin {
@@ -22,36 +26,57 @@ export function apiPlugin(): Plugin {
                 async (req: IncomingMessage, res: ServerResponse, next) => {
                     // Manejar rutas de API
                     if (req.url?.startsWith("/api/")) {
-                        const path = req.url.replace("/api/", "");
+                        const url = new URL(
+                            req.url,
+                            `http://${req.headers.host}`,
+                        );
+                        const path = url.pathname.replace("/api/", "");
 
-                        // Routing de APIs
-                        if (
-                            path === "share-list" ||
-                            path.startsWith("share-list?")
-                        ) {
-                            try {
+                        try {
+                            if (
+                                path === "share-list" ||
+                                path.startsWith("share-list/")
+                            ) {
                                 await shareListHandler(req, res);
-                            } catch (error) {
-                                console.error("API Error:", error);
-                                res.writeHead(500, {
+                            } else if (
+                                path === "auth" || path.startsWith("auth/")
+                            ) {
+                                await authHandler(req, res);
+                            } else if (
+                                path === "lists" || path.startsWith("lists/")
+                            ) {
+                                await listsHandler(req, res);
+                            } else if (
+                                path === "items" || path.startsWith("items/")
+                            ) {
+                                await itemsHandler(req, res);
+                            } else if (
+                                path === "profiles" ||
+                                path.startsWith("profiles/")
+                            ) {
+                                await profilesHandler(req, res);
+                            } else {
+                                // Ruta no encontrada
+                                res.writeHead(404, {
                                     "Content-Type": "application/json",
                                 });
                                 res.end(
                                     JSON.stringify({
-                                        error: "Internal server error",
+                                        error: "API endpoint not found",
                                     }),
                                 );
                             }
-                            return;
+                        } catch (error) {
+                            console.error("API Error:", error);
+                            res.writeHead(500, {
+                                "Content-Type": "application/json",
+                            });
+                            res.end(
+                                JSON.stringify({
+                                    error: "Internal server error",
+                                }),
+                            );
                         }
-
-                        // Ruta no encontrada
-                        res.writeHead(404, {
-                            "Content-Type": "application/json",
-                        });
-                        res.end(
-                            JSON.stringify({ error: "API endpoint not found" }),
-                        );
                         return;
                     }
 

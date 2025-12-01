@@ -18,7 +18,7 @@ import {
     Divider,
 } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../supabaseClient';
+import { api } from '../api';
 import { FaInfoCircle, FaShareAlt, FaUserCheck, FaUserClock } from 'react-icons/fa';
 import type { List, SharedUser } from '../types';
 import toast from 'react-hot-toast';
@@ -27,8 +27,6 @@ interface ShareModalProps {
     isOpen: boolean;
     onClose: () => void;
     list: List;
-    // La URL de la API del backend
-    backendApiUrl: string;
 }
 
 // Estilo simple para el contenido del modal (similar a ModalContent de Chakra)
@@ -46,7 +44,7 @@ const modalStyle = {
     overflowY: 'auto',
 };
 
-const ShareListModal: React.FC<ShareModalProps> = ({ isOpen, onClose, list, backendApiUrl }) => {
+const ShareListModal: React.FC<ShareModalProps> = ({ isOpen, onClose, list }) => {
     const { user } = useAuth();
     const [emailsInput, setEmailsInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -60,10 +58,9 @@ const ShareListModal: React.FC<ShareModalProps> = ({ isOpen, onClose, list, back
 
     const fetchSharedUsers = async () => {
         try {
-            const { data, error } = await supabase
-                .rpc('get_list_shares_with_status', { p_list_id: list.id });
+            const { data, error } = await api.lists.getShares(list.id);
 
-            if (error) throw error;
+            if (error) throw new Error(error);
             setSharedUsers(data || []);
         } catch (error) {
             console.error('Error fetching shared users:', error);
@@ -88,25 +85,14 @@ const ShareListModal: React.FC<ShareModalProps> = ({ isOpen, onClose, list, back
 
         try {
             // 1. Llamar a la API del backend
-            const response = await fetch(`${backendApiUrl}/api/share-list`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // Incluir el token de autenticación (JWT) en la cabecera
-                    'Authorization': `Bearer ${await supabase.auth.getSession().then(s => s.data.session?.access_token)}`
-                },
-                body: JSON.stringify({
-                    recipientEmails,
-                    listName: list.name,
-                    listId: list.id,
-                    senderEmail: user.email,
-                }),
+            const { error } = await api.lists.shareList({
+                recipientEmails,
+                listName: list.name,
+                listId: list.id,
+                senderEmail: user.email,
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Error desconocido al enviar emails.');
-            }
+            if (error) throw new Error(error);
 
             // 2. Éxito
             toast.success(`Invitaciones enviadas a ${recipientEmails.length} personas.`);
