@@ -319,7 +319,7 @@ const Dashboard: React.FC = () => {
                                         <Stack direction="row" spacing={1} justifyContent="center">
                                             {activeTab === 0 ? (
                                                 <>
-                                                    <Tooltip title="Editar Items">
+                                                    <Tooltip title="Editar Lista">
                                                         <IconButton size="small" onClick={() => navigate(`/list/${list.id}/edit`)}>
                                                             <FaEdit />
                                                         </IconButton>
@@ -331,7 +331,7 @@ const Dashboard: React.FC = () => {
                                                     </Tooltip>
                                                 </>
                                             ) : (
-                                                <Tooltip title="Ver Items">
+                                                <Tooltip title="Ver Lista">
                                                     <IconButton size="small" color="primary" onClick={() => navigate(`/share/${list.id}`)}>
                                                         <FaList />
                                                     </IconButton>
