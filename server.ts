@@ -18,7 +18,7 @@ app.use(express.static(path.join(__dirname, "dist")));
 
 // API Routes
 // We use a middleware to match the /api prefix and route to the appropriate handler
-app.all("/api*", async (req, res) => {
+app.use("/api", async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
     const pathName = url.pathname.replace("/api/", "");
 
