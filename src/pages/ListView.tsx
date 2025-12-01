@@ -189,21 +189,26 @@ const ListView: React.FC = () => {
         }
     };
 
-    // Fetch list data when listId or user changes
+    // Fetch list data when listId or user changes (only if authenticated in shared mode, or in owner mode)
     useEffect(() => {
+        // Don't fetch if user is not authenticated and we're in shared mode
+        if (!user && !isOwnerMode) {
+            setIsLoading(false);
+            return;
+        }
         fetchListData();
     }, [listId, user]);
 
     // Show auth dialog if not authenticated and in shared mode
     useEffect(() => {
-        if (!user && !isOwnerMode && !isLoading) {
+        if (!user && !isOwnerMode) {
             setShowAuthDialog(true);
         }
-    }, [user, isOwnerMode, isLoading]);
+    }, [user, isOwnerMode]);
 
     // Auto-register user to shared list if authenticated (only once)
     useEffect(() => {
-        if (user && !isOwnerMode && listId && !isLoading) {
+        if (user && !isOwnerMode && listId) {
             api.lists.registerUserToList(listId).catch((error) => {
                 console.error('Error registering user to list:', error);
             });
@@ -515,12 +520,12 @@ const ListView: React.FC = () => {
         _event: React.MouseEvent<HTMLElement>,
         newViewMode: 'grid' | 'table',
     ) => {
-        if (newViewMode !== null) {
+                if (newViewMode !== null) {
             setViewMode(newViewMode);
         }
     };
 
-    if (isLoading || !list) {
+    if (isLoading) {
         return (
             <Box
                 sx={{
@@ -531,6 +536,51 @@ const ListView: React.FC = () => {
                 }}
             >
                 <CircularProgress color="primary" />
+            </Box>
+        );
+    }
+
+    // Show message if not authenticated in shared mode
+    if (!user && !isOwnerMode) {
+        return (
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: '100vh',
+                    flexDirection: 'column',
+                    gap: 2,
+                }}
+            >
+                <Typography variant="h5">Autenticación Requerida</Typography>
+                <Typography variant="body1" color="text.secondary">
+                    Por favor, inicia sesión o regístrate para acceder a esta lista compartida.
+                </Typography>
+                <AuthRequiredDialog
+                    open={showAuthDialog}
+                    onClose={() => {
+                        setShowAuthDialog(false);
+                        navigate('/');
+                    }}
+                    onLogin={handleAuthDialogLogin}
+                    onSignup={handleAuthDialogSignup}
+                />
+            </Box>
+        );
+    }
+
+    if (!list) {
+        return (
+            <Box
+                sx={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    minHeight: '100vh'
+                }}
+            >
+                <Typography variant="h6">Lista no encontrada</Typography>
             </Box>
         );
     }
