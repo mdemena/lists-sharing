@@ -176,6 +176,19 @@ export const api = {
                 };
             }
         },
+        getSharedWithMe: async () => {
+            try {
+                const response = await client.get(
+                    "/lists?action=my-shared-lists",
+                );
+                return { data: response.data, error: null };
+            } catch (error: any) {
+                return {
+                    data: null,
+                    error: error.response?.data?.error || error.message,
+                };
+            }
+        },
     },
     items: {
         list: async (listId: string) => {

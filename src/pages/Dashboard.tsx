@@ -25,6 +25,8 @@ import {
     Paper,
     IconButton,
     Tooltip,
+    Tabs,
+    Tab,
 } from '@mui/material';
 import { FaPlus, FaList, FaShareSquare, FaTh, FaEdit } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
@@ -58,7 +60,9 @@ const Dashboard: React.FC = () => {
 
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [isCreationModalOpen, setIsCreationModalOpen] = useState(false);
-    const [listToShare, setListToShare] = useState<List | null>(null); // <-- NUEVO: Almacena la lista a compartir
+    const [listToShare, setListToShare] = useState<List | null>(null);
+    const [activeTab, setActiveTab] = useState(0);
+    const [sharedLists, setSharedLists] = useState<List[]>([]);
 
     // URL de la API del backend (a través del proxy de Vite)
     // const BACKEND_API_URL = '';
@@ -68,12 +72,16 @@ const Dashboard: React.FC = () => {
         setIsLoading(true);
 
         try {
-            const { data, error } = await api.lists.list();
+            // Fetch owned lists
+            const { data: ownedData, error: ownedError } = await api.lists.list();
+            if (ownedError) throw new Error(ownedError);
+            setLists(ownedData as List[]);
 
-            if (error) throw new Error(error);
+            // Fetch shared lists
+            const { data: sharedData, error: sharedError } = await api.lists.getSharedWithMe();
+            if (sharedError) throw new Error(sharedError);
+            setSharedLists(sharedData as List[]);
 
-            // Casteamos el resultado a nuestro tipo List[]
-            setLists(data as List[]);
         } catch (error: any) {
             toast.error(`Error al cargar listas: ${error.message || 'No se pudieron recuperar tus listas.'}`);
         } finally {
@@ -134,7 +142,7 @@ const Dashboard: React.FC = () => {
 
     // --- JSX de Componentes ---
 
-    const ListCard: React.FC<{ list: List }> = ({ list }) => (
+    const ListCard: React.FC<{ list: List; isShared?: boolean }> = ({ list, isShared }) => (
         <Card
             sx={{
                 width: '100%',
@@ -144,7 +152,7 @@ const Dashboard: React.FC = () => {
                 cursor: 'pointer',
                 '&:hover': { boxShadow: 6, transform: 'translateY(-2px)' }
             }}
-            onClick={() => navigate(`/list/${list.id}/edit`)}
+            onClick={() => navigate(isShared ? `/share/${list.id}` : `/list/${list.id}/edit`)}
         >
             <CardContent>
                 <Typography variant="h6" component="h3" mb={1} noWrap>
@@ -155,29 +163,46 @@ const Dashboard: React.FC = () => {
                 </Typography>
             </CardContent>
             <CardActions sx={{ justifyContent: 'flex-end', pb: 2, pr: 2 }}>
-                <Button
-                    size="small"
-                    startIcon={<FaList />}
-                    variant="outlined"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/list/${list.id}/edit`);
-                    }}
-                >
-                    Editar Items
-                </Button>
-                <Button
-                    size="small"
-                    startIcon={<FaShareSquare />}
-                    variant="contained"
-                    color="secondary"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        handleShareClick(list);
-                    }}
-                >
-                    Compartir {list.list_shares?.[0]?.count ? `(${list.list_shares[0].count})` : ''}
-                </Button>
+                {!isShared ? (
+                    <>
+                        <Button
+                            size="small"
+                            startIcon={<FaList />}
+                            variant="outlined"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/list/${list.id}/edit`);
+                            }}
+                        >
+                            Editar Items
+                        </Button>
+                        <Button
+                            size="small"
+                            startIcon={<FaShareSquare />}
+                            variant="contained"
+                            color="secondary"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleShareClick(list);
+                            }}
+                        >
+                            Compartir {list.list_shares?.[0]?.count ? `(${list.list_shares[0].count})` : ''}
+                        </Button>
+                    </>
+                ) : (
+                    <Button
+                        size="small"
+                        startIcon={<FaList />}
+                        variant="contained"
+                        color="primary"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/share/${list.id}`);
+                        }}
+                    >
+                        Ver Lista
+                    </Button>
+                )}
             </CardActions>
         </Card>
     );
@@ -204,9 +229,16 @@ const Dashboard: React.FC = () => {
                 </Button>
             </Stack>
 
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+                <Tabs value={activeTab} onChange={(_, newValue) => setActiveTab(newValue)} aria-label="dashboard tabs">
+                    <Tab label={`Mis Listas (${lists.length})`} />
+                    <Tab label={`Compartidas Conmigo (${sharedLists.length})`} />
+                </Tabs>
+            </Box>
+
             <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
                 <Typography variant="h5" component="h2">
-                    Listas Creadas ({lists.length})
+                    {activeTab === 0 ? 'Mis Listas' : 'Listas Compartidas'}
                 </Typography>
                 <ToggleButtonGroup
                     value={viewMode}
@@ -229,22 +261,28 @@ const Dashboard: React.FC = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
                     <CircularProgress color="primary" />
                 </Box>
-            ) : lists.length === 0 ? (
+            ) : (activeTab === 0 ? lists : sharedLists).length === 0 ? (
                 <Box sx={{ textAlign: 'center', py: 6, border: '1px dashed grey', borderRadius: 1, bgcolor: 'white' }}>
-                    <Typography variant="h6" mb={1}>¡Aún no tienes listas!</Typography>
-                    <Typography color="text.secondary" mb={2}>
-                        Crea tu primera lista de regalos, deseos o tareas.
+                    <Typography variant="h6" mb={1}>
+                        {activeTab === 0 ? '¡Aún no tienes listas!' : '¡No tienes listas compartidas!'}
                     </Typography>
-                    <Button startIcon={<FaPlus />} variant="contained" color="primary" onClick={() => setIsCreationModalOpen(true)}>
-                        Crear Nueva Lista
-                    </Button>
+                    <Typography color="text.secondary" mb={2}>
+                        {activeTab === 0 
+                            ? 'Crea tu primera lista de regalos, deseos o tareas.' 
+                            : 'Cuando alguien comparta una lista contigo, aparecerá aquí.'}
+                    </Typography>
+                    {activeTab === 0 && (
+                        <Button startIcon={<FaPlus />} variant="contained" color="primary" onClick={() => setIsCreationModalOpen(true)}>
+                            Crear Nueva Lista
+                        </Button>
+                    )}
                 </Box>
             ) : viewMode === 'grid' ? (
                 // Renderizado de Listas en Grid
                 <Grid container spacing={3}>
-                    {lists.map(list => (
+                    {(activeTab === 0 ? lists : sharedLists).map(list => (
                         <Grid size={{ xs: 12, sm: 6, md: 4 }} key={list.id}>
-                            <ListCard list={list} />
+                            <ListCard list={list} isShared={activeTab === 1} />
                         </Grid>
                     ))}
                 </Grid>
@@ -256,12 +294,12 @@ const Dashboard: React.FC = () => {
                             <TableRow>
                                 <TableCell>Nombre</TableCell>
                                 <TableCell>Descripción</TableCell>
-                                <TableCell align="center">Compartido con</TableCell>
+                                {activeTab === 0 && <TableCell align="center">Compartido con</TableCell>}
                                 <TableCell align="center">Acciones</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {lists.map((list) => (
+                            {(activeTab === 0 ? lists : sharedLists).map((list) => (
                                 <TableRow
                                     key={list.id}
                                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
@@ -272,21 +310,33 @@ const Dashboard: React.FC = () => {
                                     <TableCell sx={{ maxWidth: 300, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                         {list.description || '-'}
                                     </TableCell>
-                                    <TableCell align="center">
-                                        {list.list_shares?.[0]?.count ? `${list.list_shares[0].count} usuarios` : '-'}
-                                    </TableCell>
+                                    {activeTab === 0 && (
+                                        <TableCell align="center">
+                                            {list.list_shares?.[0]?.count ? `${list.list_shares[0].count} usuarios` : '-'}
+                                        </TableCell>
+                                    )}
                                     <TableCell align="center">
                                         <Stack direction="row" spacing={1} justifyContent="center">
-                                            <Tooltip title="Editar Items">
-                                                <IconButton size="small" onClick={() => navigate(`/list/${list.id}/edit`)}>
-                                                    <FaEdit />
-                                                </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title="Compartir">
-                                                <IconButton size="small" color="secondary" onClick={() => handleShareClick(list)}>
-                                                    <FaShareSquare />
-                                                </IconButton>
-                                            </Tooltip>
+                                            {activeTab === 0 ? (
+                                                <>
+                                                    <Tooltip title="Editar Items">
+                                                        <IconButton size="small" onClick={() => navigate(`/list/${list.id}/edit`)}>
+                                                            <FaEdit />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title="Compartir">
+                                                        <IconButton size="small" color="secondary" onClick={() => handleShareClick(list)}>
+                                                            <FaShareSquare />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </>
+                                            ) : (
+                                                <Tooltip title="Ver Items">
+                                                    <IconButton size="small" color="primary" onClick={() => navigate(`/share/${list.id}`)}>
+                                                        <FaList />
+                                                    </IconButton>
+                                                </Tooltip>
+                                            )}
                                         </Stack>
                                     </TableCell>
                                 </TableRow>

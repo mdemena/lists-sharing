@@ -88,6 +88,27 @@ export const handler = async (req: IncomingMessage, res: ServerResponse) => {
 
                 if (error) throw error;
                 res.end(JSON.stringify(data));
+            } else if (url.searchParams.get("action") === "my-shared-lists") {
+                // Get lists shared with the authenticated user
+                const { data: { user }, error: userError } = await supabase.auth
+                    .getUser();
+                if (userError || !user) {
+                    throw userError || new Error("User not found");
+                }
+
+                // Query list_shares where user_id matches, then join with lists
+                const { data, error } = await supabase
+                    .from("list_shares")
+                    .select("list_id, lists(*)")
+                    .eq("user_id", user.id);
+
+                if (error) throw error;
+
+                // Extract the lists from the joined data
+                const sharedLists = data?.map((share: any) =>
+                    share.lists
+                ).filter(Boolean) || [];
+                res.end(JSON.stringify(sharedLists));
             } else {
                 // Get all lists for user (RLS handles filtering by owner_id usually,
                 // but we can also be explicit if needed. The original code used .eq('owner_id', user.id))
