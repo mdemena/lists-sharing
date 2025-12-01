@@ -19,8 +19,12 @@ app.use(express.static(path.join(__dirname, "dist")));
 // API Routes
 // We use a middleware to match the /api prefix and route to the appropriate handler
 app.use("/api", async (req, res) => {
+    // When using app.use("/api", ...), Express strips the /api prefix from req.url
+    // So req.url will be like "/auth?action=signin" instead of "/api/auth?action=signin"
     const url = new URL(req.url, `http://${req.headers.host}`);
-    const pathName = url.pathname.replace("/api/", "");
+    const pathName = url.pathname.startsWith("/")
+        ? url.pathname.substring(1)
+        : url.pathname;
 
     try {
         if (pathName === "share-list" || pathName.startsWith("share-list/")) {
@@ -48,7 +52,7 @@ app.use("/api", async (req, res) => {
 
 // Catch-all handler for any request that doesn't match the above
 // Send back React's index.html file.
-app.get("/*", (req, res) => {
+app.use((req, res) => {
     res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
