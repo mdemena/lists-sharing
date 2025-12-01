@@ -56,6 +56,38 @@ export const handler = async (req: IncomingMessage, res: ServerResponse) => {
 
                 if (error) throw error;
                 res.end(JSON.stringify(data));
+            } else if (url.searchParams.get("action") === "register-user") {
+                // Auto-register authenticated user to a shared list
+                const listId = url.searchParams.get("listId");
+                if (!listId) throw new Error("List ID required");
+
+                const { data: { user }, error: userError } = await supabase.auth
+                    .getUser();
+                if (userError || !user) {
+                    throw userError || new Error("User not found");
+                }
+
+                // Get user's email
+                const userEmail = user.email;
+                if (!userEmail) {
+                    throw new Error("User email not found");
+                }
+
+                // Update list_shares to set user_id for this email and list
+                const { data, error } = await supabase
+                    .from("list_shares")
+                    .upsert({
+                        list_id: listId,
+                        email: userEmail.toLowerCase().trim(),
+                        user_id: user.id,
+                    }, {
+                        onConflict: "list_id,email",
+                    })
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                res.end(JSON.stringify(data));
             } else {
                 // Get all lists for user (RLS handles filtering by owner_id usually,
                 // but we can also be explicit if needed. The original code used .eq('owner_id', user.id))

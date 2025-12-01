@@ -37,6 +37,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api';
 import type { List, ListItem, ImageUrl, ExternalUrl } from '../types'; // Importamos los tipos
 import toast from 'react-hot-toast';
+import AuthRequiredDialog from '../components/AuthRequiredDialog';
 
 // --- Estilos para el Modal de MUI ---
 const modalStyle = {
@@ -142,6 +143,7 @@ const ListView: React.FC = () => {
     const [items, setItems] = useState<ListItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
+    const [showAuthDialog, setShowAuthDialog] = useState(false);
 
     // Estado y Hooks para el Modal de Añadir/Editar Item
     const [modalOpen, setModalOpen] = useState(false);
@@ -189,7 +191,29 @@ const ListView: React.FC = () => {
 
     useEffect(() => {
         fetchListData();
-    }, [listId, user]);
+        // Show auth dialog if not authenticated and in shared mode
+        if (!user && !isOwnerMode && !isLoading) {
+            setShowAuthDialog(true);
+        }
+        // Auto-register user to shared list if authenticated
+        if (user && !isOwnerMode && listId && !isLoading) {
+            api.lists.registerUserToList(listId).catch((error) => {
+                console.error('Error registering user to list:', error);
+            });
+        }
+    }, [listId, user, isOwnerMode, isLoading]);
+
+    const handleAuthDialogLogin = () => {
+        // Save current URL for redirect after login
+        localStorage.setItem('redirectAfterAuth', window.location.pathname);
+        navigate('/login', { state: { isRegister: false } });
+    };
+
+    const handleAuthDialogSignup = () => {
+        // Save current URL for redirect after signup
+        localStorage.setItem('redirectAfterAuth', window.location.pathname);
+        navigate('/login', { state: { isRegister: true } });
+    };
 
 
     // --- Lógica de Gestión de URLs e Imágenes ---
@@ -792,6 +816,14 @@ const ListView: React.FC = () => {
                     </Stack>
                 </Box>
             </Modal>
+
+            {/* Auth Required Dialog */}
+            <AuthRequiredDialog
+                open={showAuthDialog}
+                onClose={() => setShowAuthDialog(false)}
+                onLogin={handleAuthDialogLogin}
+                onSignup={handleAuthDialogSignup}
+            />
         </Box>
     );
 };

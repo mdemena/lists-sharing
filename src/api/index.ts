@@ -163,6 +163,19 @@ export const api = {
                 };
             }
         },
+        registerUserToList: async (listId: string) => {
+            try {
+                const response = await client.get(
+                    `/lists?action=register-user&listId=${listId}`,
+                );
+                return { data: response.data, error: null };
+            } catch (error: any) {
+                return {
+                    data: null,
+                    error: error.response?.data?.error || error.message,
+                };
+            }
+        },
     },
     items: {
         list: async (listId: string) => {

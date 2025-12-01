@@ -1,12 +1,13 @@
 // frontend/src/pages/Login.tsx (Código completo adaptado)
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Button, TextField, Typography, Container, Divider, Stack } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { FaGoogle, FaGithub } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api'; // Necesario para el login social
 import toast from 'react-hot-toast';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 // Creamos un contenedor centrado usando styled
 const CenteredContainer = styled(Container)(({ theme }) => ({
@@ -18,6 +19,8 @@ const CenteredContainer = styled(Container)(({ theme }) => ({
 }));
 
 const Login: React.FC = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isRegister, setIsRegister] = useState(false);
@@ -25,6 +28,14 @@ const Login: React.FC = () => {
 
     // @ts-ignore: Accedemos a los métodos del contexto
     const { signIn, signUp } = useAuth();
+
+    // Check if we should start in register mode
+    useEffect(() => {
+        const state = location.state as { isRegister?: boolean };
+        if (state?.isRegister) {
+            setIsRegister(true);
+        }
+    }, [location]);
 
     const handleAuth = async (event: React.FormEvent) => {
         event.preventDefault();
@@ -43,6 +54,15 @@ const Login: React.FC = () => {
 
             // ✅ SUSTITUCIÓN: Llamada directa a toast
             toast.success(isRegister ? '¡Registro Exitoso! Revisa tu correo.' : '¡Bienvenido! Has iniciado sesión.', { duration: 4000 });
+
+            // Check for redirect URL
+            const redirectUrl = localStorage.getItem('redirectAfterAuth');
+            if (redirectUrl) {
+                localStorage.removeItem('redirectAfterAuth');
+                navigate(redirectUrl);
+            } else {
+                navigate('/dashboard');
+            }
 
         } catch (error: any) {
             // ✅ SUSTITUCIÓN: Llamada directa a toast
