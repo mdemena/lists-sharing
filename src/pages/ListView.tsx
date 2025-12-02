@@ -169,6 +169,12 @@ const ListView: React.FC = () => {
         setIsLoading(true);
 
         try {
+            // 0. Registrar al usuario en la lista si es necesario (Shared Mode)
+            // Esto asegura que el usuario tenga permisos (RLS) antes de intentar obtener la lista
+            if (user && !isOwnerMode) {
+                await api.lists.registerUserToList(listId);
+            }
+
             // 1. Obtener la información de la lista
             const { data: listData, error: listError } = await api.lists.get(listId);
 
@@ -209,14 +215,7 @@ const ListView: React.FC = () => {
         }
     }, [user, isOwnerMode]);
 
-    // Auto-register user to shared list if authenticated (only once)
-    useEffect(() => {
-        if (user && !isOwnerMode && listId) {
-            api.lists.registerUserToList(listId).catch((error) => {
-                console.error('Error registering user to list:', error);
-            });
-        }
-    }, [user, listId, isOwnerMode]); // Removed isLoading to prevent re-registration
+
 
     const handleAuthDialogLogin = () => {
         // Save current URL for redirect after login
