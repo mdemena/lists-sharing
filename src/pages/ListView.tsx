@@ -172,13 +172,18 @@ const ListView: React.FC = () => {
             // 0. Registrar al usuario en la lista si es necesario (Shared Mode)
             // Esto asegura que el usuario tenga permisos (RLS) antes de intentar obtener la lista
             if (user && !isOwnerMode) {
-                await api.lists.registerUserToList(listId);
+                const registerResult = await api.lists.registerUserToList(listId);
+                if (registerResult.error) {
+                    throw new Error(`Registration failed: ${registerResult.error}`);
+                }
             }
 
             // 1. Obtener la información de la lista
             const { data: listData, error: listError } = await api.lists.get(listId);
 
-            if (listError) throw new Error(listError);
+            if (listError) {
+                throw new Error(listError);
+            }
             setList(listData as List);
 
             // 2. Obtener los ítems de la lista

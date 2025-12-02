@@ -125,18 +125,24 @@ export const handler = async (req: IncomingMessage, res: ServerResponse) => {
                         .is("user_id", null);
                 }
 
-                // Query list_shares where user_id matches, then join with lists
+                // Query list_shares where user_id matches, then join with lists and shared_by profile
                 const { data, error } = await supabase
                     .from("list_shares")
-                    .select("list_id, lists(*)")
+                    .select(`
+                        list_id, 
+                        lists(*),
+                        shared_by_profile:profiles!list_shares_shared_by_fkey(display_name, email)
+                    `)
                     .eq("user_id", user.id);
 
                 if (error) throw error;
 
-                // Extract the lists from the joined data
-                const sharedLists = data?.map((share: any) =>
-                    share.lists
-                ).filter(Boolean) || [];
+                // Extract the lists and add shared_by info
+                const sharedLists = data?.map((share: any) => ({
+                    ...share.lists,
+                    shared_by_name: share.shared_by_profile?.display_name ||
+                        share.shared_by_profile?.email || "Usuario desconocido",
+                })).filter(Boolean) || [];
                 res.end(JSON.stringify(sharedLists));
             } else {
                 // Get all lists for user (RLS handles filtering by owner_id usually,

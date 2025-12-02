@@ -1,6 +1,6 @@
 // frontend/src/types/index.ts
 
-import type { User } from '@supabase/supabase-js';
+import type { User } from "@supabase/supabase-js";
 
 // Tipo básico del usuario, extendiendo el tipo de Supabase
 export interface AppUser extends User {
@@ -21,7 +21,7 @@ export interface ExternalUrl {
 }
 
 // Interfaz para Imágenes (podríamos añadir una descripción opcional si es necesario)
-export interface ImageUrl extends ExternalUrl { }
+export interface ImageUrl extends ExternalUrl {}
 // Usaremos la misma estructura: { url: string, label: string }
 
 // --- Listas y Elementos ---
@@ -33,6 +33,7 @@ export interface List {
     description: string | null;
     created_at: string; // timestamp
     list_shares?: { count: number }[];
+    shared_by_name?: string; // Nombre del usuario que compartió la lista
 }
 
 // Modelo de un Elemento de la Lista
