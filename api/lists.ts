@@ -38,15 +38,38 @@ export const handler = async (req: IncomingMessage, res: ServerResponse) => {
     try {
         if (req.method === "GET") {
             if (id) {
-                // Get single list
-                const { data, error } = await supabase
+                // Get single list with shared_by info if applicable
+                const { data: { user } } = await supabase.auth.getUser();
+
+                // First get the list
+                const { data: listData, error: listError } = await supabase
                     .from("lists")
                     .select("*, list_shares(count)")
                     .eq("id", id)
                     .single();
 
-                if (error) throw error;
-                res.end(JSON.stringify(data));
+                if (listError) throw listError;
+
+                // If user is authenticated and not the owner, get shared_by info
+                if (user && listData && listData.owner_id !== user.id) {
+                    const { data: shareData } = await supabase
+                        .from("list_shares")
+                        .select(
+                            "shared_by_profile:profiles!list_shares_shared_by_fkey(display_name, email)",
+                        )
+                        .eq("list_id", id)
+                        .eq("user_id", user.id)
+                        .maybeSingle();
+
+                    if (shareData?.shared_by_profile) {
+                        const profile = shareData.shared_by_profile as any;
+                        listData.shared_by_name = profile.display_name ||
+                            profile.email ||
+                            "Usuario desconocido";
+                    }
+                }
+
+                res.end(JSON.stringify(listData));
             } else if (url.searchParams.get("action") === "shares") {
                 const listId = url.searchParams.get("listId");
                 if (!listId) throw new Error("List ID required");

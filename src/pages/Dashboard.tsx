@@ -158,9 +158,14 @@ const Dashboard: React.FC = () => {
                 <Typography variant="h6" component="h3" mb={1} noWrap>
                     {list.name}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" mb={2} noWrap sx={{ WebkitLineClamp: 2 }}>
+                <Typography variant="body2" color="text.secondary" mb={1} noWrap sx={{ WebkitLineClamp: 2 }}>
                     {list.description || 'Sin descripción.'}
                 </Typography>
+                {isShared && list.shared_by_name && (
+                    <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+                        Compartida por: {list.shared_by_name}
+                    </Typography>
+                )}
             </CardContent>
             <CardActions sx={{ justifyContent: 'flex-end', pb: 2, pr: 2 }}>
                 {!isShared ? (
@@ -295,6 +300,7 @@ const Dashboard: React.FC = () => {
                                 <TableCell>Nombre</TableCell>
                                 <TableCell>Descripción</TableCell>
                                 {activeTab === 0 && <TableCell align="center">Compartido con</TableCell>}
+                                {activeTab === 1 && <TableCell align="center">Compartida por</TableCell>}
                                 <TableCell align="center">Acciones</TableCell>
                             </TableRow>
                         </TableHead>
@@ -313,6 +319,11 @@ const Dashboard: React.FC = () => {
                                     {activeTab === 0 && (
                                         <TableCell align="center">
                                             {list.list_shares?.[0]?.count ? `${list.list_shares[0].count} usuarios` : '-'}
+                                        </TableCell>
+                                    )}
+                                    {activeTab === 1 && (
+                                        <TableCell align="center">
+                                            {list.shared_by_name || '-'}
                                         </TableCell>
                                     )}
                                     <TableCell align="center">

@@ -622,6 +622,11 @@ const ListView: React.FC = () => {
             </Stack>
             <Typography variant="h6" color="text.secondary" mb={4}>
                 {isOwnerMode ? `Modo Edición` : `Lista Compartida`}: {list.description}
+                {!isOwnerMode && list.shared_by_name && (
+                    <Typography component="span" variant="body2" sx={{ display: 'block', fontStyle: 'italic', mt: 1 }}>
+                        Compartida por: {list.shared_by_name}
+                    </Typography>
+                )}
             </Typography>
 
             {isOwnerMode && (
