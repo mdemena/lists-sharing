@@ -1,5 +1,5 @@
 import { IncomingMessage, ServerResponse } from "http";
-import { createAuthClient } from "./supabase-client";
+import { createAdminClient, createAuthClient } from "./supabase-client";
 
 const readBody = (req: IncomingMessage): Promise<any> => {
     return new Promise((resolve, reject) => {
@@ -74,7 +74,9 @@ export const handler = async (req: IncomingMessage, res: ServerResponse) => {
                 }
 
                 // Update list_shares to set user_id for this email and list
-                const { data, error } = await supabase
+                // Use admin client to bypass RLS for this specific operation
+                const supabaseAdmin = createAdminClient();
+                const { data, error } = await supabaseAdmin
                     .from("list_shares")
                     .upsert({
                         list_id: listId,
@@ -94,6 +96,17 @@ export const handler = async (req: IncomingMessage, res: ServerResponse) => {
                     .getUser();
                 if (userError || !user) {
                     throw userError || new Error("User not found");
+                }
+
+                // Auto-claim any pending shares for this email (where user_id is null)
+                const userEmail = user.email;
+                if (userEmail) {
+                    const supabaseAdmin = createAdminClient();
+                    await supabaseAdmin
+                        .from("list_shares")
+                        .update({ user_id: user.id })
+                        .eq("email", userEmail.toLowerCase().trim())
+                        .is("user_id", null);
                 }
 
                 // Query list_shares where user_id matches, then join with lists

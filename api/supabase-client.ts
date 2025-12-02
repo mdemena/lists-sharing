@@ -36,3 +36,21 @@ export const createAuthClient = (accessToken: string) => {
         },
     });
 };
+
+export const createAdminClient = () => {
+    const supabaseUrl = process.env.VITE_SUPABASE_URL;
+    const supabaseServiceRoleKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseServiceRoleKey) {
+        throw new Error(
+            "Missing Supabase configuration variables (Service Role Key) in process.env",
+        );
+    }
+
+    return createClient(supabaseUrl, supabaseServiceRoleKey, {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+        },
+    });
+};
