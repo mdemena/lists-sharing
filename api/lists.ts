@@ -76,12 +76,28 @@ export const handler = async (req: IncomingMessage, res: ServerResponse) => {
                 // Update list_shares to set user_id for this email and list
                 // Use admin client to bypass RLS for this specific operation
                 const supabaseAdmin = createAdminClient();
+
+                // 1. Fetch list to get owner_id
+                const { data: listData, error: listError } = await supabaseAdmin
+                    .from("lists")
+                    .select("owner_id")
+                    .eq("id", listId)
+                    .single();
+
+                if (listError || !listData) {
+                    throw new Error(
+                        "List not found or error fetching list details",
+                    );
+                }
+
+                // 2. Upsert share with shared_by = owner_id
                 const { data, error } = await supabaseAdmin
                     .from("list_shares")
                     .upsert({
                         list_id: listId,
                         email: userEmail.toLowerCase().trim(),
                         user_id: user.id,
+                        shared_by: listData.owner_id, // Set shared_by to list owner
                     }, {
                         onConflict: "list_id,email",
                     })
