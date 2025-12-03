@@ -5,6 +5,7 @@ import { handler as shareListHandler } from "./api/share-list";
 import { handler as authHandler } from "./api/auth";
 import { handler as listsHandler } from "./api/lists";
 import { handler as itemsHandler } from "./api/items";
+import { handler as itemsHandler } from "./api/items";
 import { handler as profilesHandler } from "./api/profiles";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -36,18 +37,19 @@ app.use("/api", async (req, res) => {
         } else if (pathName === "items" || pathName.startsWith("items/")) {
             await itemsHandler(req, res);
         } else if (
-            pathName === "profiles" || pathName.startsWith("profiles/")
-        ) {
-            await profilesHandler(req, res);
-        } else {
-            res.status(404).json({ error: "API endpoint not found" });
-        }
-    } catch (error) {
-        console.error("API Error:", error);
-        if (!res.headersSent) {
-            res.status(500).json({ error: "Internal server error" });
-        }
+        } else if (
+        pathName === "profiles" || pathName.startsWith("profiles/")
+    ) {
+        await profilesHandler(req, res);
+    } else {
+        res.status(404).json({ error: "API endpoint not found" });
     }
+} catch (error) {
+    console.error("API Error:", error);
+    if (!res.headersSent) {
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
 });
 
 // Catch-all handler for any request that doesn't match the above

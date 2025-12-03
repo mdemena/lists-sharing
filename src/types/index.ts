@@ -20,9 +20,13 @@ export interface ExternalUrl {
     label: string;
 }
 
-// Interfaz para Imágenes (podríamos añadir una descripción opcional si es necesario)
-export interface ImageUrl extends ExternalUrl {}
-// Usaremos la misma estructura: { url: string, label: string }
+// Interfaz para Imágenes (soporta tanto URLs externas como imágenes subidas)
+export interface ImageUrl {
+    url: string;           // URL completa (puede ser externa o de Supabase Storage)
+    label: string;         // Etiqueta descriptiva
+    storage_path?: string; // Path en Supabase Storage (si es imagen subida)
+    is_uploaded?: boolean; // true si es imagen subida, false si es URL externa
+}
 
 // --- Listas y Elementos ---
 

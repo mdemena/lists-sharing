@@ -37,9 +37,11 @@ import {
 import { FaTrash, FaEdit, FaCheck, FaTimes, FaPlus, FaEuroSign, FaStar, FaExternalLinkAlt, FaTh, FaList } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api';
+import { deleteMultipleImages } from '../api/storage';
 import type { List, ListItem, ImageUrl, ExternalUrl } from '../types'; // Importamos los tipos
 import toast from 'react-hot-toast';
 import AuthRequiredDialog from '../components/AuthRequiredDialog';
+import ImageUploader from '../components/ImageUploader';
 
 // --- Estilos para el Modal de MUI ---
 const modalStyle = {
@@ -354,9 +356,21 @@ const ListView: React.FC = () => {
         if (!window.confirm(`¿Estás seguro de que quieres eliminar "${item.name}"?`)) return;
 
         try {
+            // 1. Eliminar el ítem de la base de datos
             const { error } = await api.items.delete(item.id);
 
             if (error) throw new Error(error);
+
+            // 2. Eliminar imágenes asociadas del storage (si existen)
+            if (item.image_urls && item.image_urls.length > 0) {
+                const pathsToDelete = item.image_urls
+                    .filter(img => img.is_uploaded && img.storage_path)
+                    .map(img => img.storage_path as string);
+
+                if (pathsToDelete.length > 0) {
+                    await deleteMultipleImages(pathsToDelete);
+                }
+            }
 
             setItems(items.filter(i => i.id !== item.id));
             toast.success('Ítem eliminado.');
@@ -408,15 +422,15 @@ const ListView: React.FC = () => {
 
         const AdjudicationStatus = !isOwnerMode ? (
             <Box sx={{
-                bgcolor: item.is_adjudicated 
-                    ? alpha(theme.palette.error.main, 0.1) 
+                bgcolor: item.is_adjudicated
+                    ? alpha(theme.palette.error.main, 0.1)
                     : alpha(theme.palette.success.main, 0.1),
-                color: item.is_adjudicated 
-                    ? theme.palette.error.main 
+                color: item.is_adjudicated
+                    ? theme.palette.error.main
                     : theme.palette.success.main,
                 border: '1px solid',
-                borderColor: item.is_adjudicated 
-                    ? alpha(theme.palette.error.main, 0.3) 
+                borderColor: item.is_adjudicated
+                    ? alpha(theme.palette.error.main, 0.3)
                     : alpha(theme.palette.success.main, 0.3),
                 p: 0.5,
                 borderRadius: 1,
@@ -535,7 +549,7 @@ const ListView: React.FC = () => {
         _event: React.MouseEvent<HTMLElement>,
         newViewMode: 'grid' | 'table',
     ) => {
-                if (newViewMode !== null) {
+        if (newViewMode !== null) {
             setViewMode(newViewMode);
         }
     };
@@ -706,15 +720,15 @@ const ListView: React.FC = () => {
                                         {!isOwnerMode && (
                                             <TableCell align="center">
                                                 <Box sx={{
-                                                    bgcolor: item.is_adjudicated 
-                                                        ? alpha(theme.palette.error.main, 0.1) 
+                                                    bgcolor: item.is_adjudicated
+                                                        ? alpha(theme.palette.error.main, 0.1)
                                                         : alpha(theme.palette.success.main, 0.1),
-                                                    color: item.is_adjudicated 
-                                                        ? theme.palette.error.main 
+                                                    color: item.is_adjudicated
+                                                        ? theme.palette.error.main
                                                         : theme.palette.success.main,
                                                     border: '1px solid',
-                                                    borderColor: item.is_adjudicated 
-                                                        ? alpha(theme.palette.error.main, 0.3) 
+                                                    borderColor: item.is_adjudicated
+                                                        ? alpha(theme.palette.error.main, 0.3)
                                                         : alpha(theme.palette.success.main, 0.3),
                                                     p: 0.5,
                                                     borderRadius: 1,
@@ -822,38 +836,15 @@ const ListView: React.FC = () => {
                             />
                         </Stack>
 
-                        {/* Bloque de URLs de Imágenes */}
-                        {/* ... (Implementación de manejo de arrays similar a Login.tsx pero con TextField) */}
-                        <Typography variant="h6" mt={2}>Imágenes del Ítem</Typography>
-                        <Stack spacing={2}>
-                            {currentItem.image_urls.map((image, index) => (
-                                <Box key={`img-${index}`} sx={{ border: '1px solid #eee', p: 1, borderRadius: 1 }}>
-                                    <Stack direction="row" spacing={1} alignItems="center">
-                                        <TextField
-                                            label={`URL de Imagen ${index + 1}`}
-                                            size="small"
-                                            fullWidth
-                                            value={image.url}
-                                            onChange={(e) => handleMediaUrlChange(index, 'url', e.target.value, 'image')}
-                                        />
-                                        <IconButton size="small" color="error" onClick={() => handleRemoveMediaUrl(index, 'image')}>
-                                            <FaTrash size={14} />
-                                        </IconButton>
-                                    </Stack>
-                                    <TextField
-                                        label="Etiqueta (Ej: Foto Principal)"
-                                        size="small"
-                                        fullWidth
-                                        value={image.label}
-                                        onChange={(e) => handleMediaUrlChange(index, 'label', e.target.value, 'image')}
-                                        sx={{ mt: 1 }}
-                                    />
-                                </Box>
-                            ))}
-                            <Button variant="outlined" onClick={() => handleAddMediaUrl('image')} startIcon={<FaPlus />}>
-                                Añadir Imagen
-                            </Button>
-                        </Stack>
+                        {/* Bloque de Imágenes - Usando ImageUploader */}
+                        {user && listId && (
+                            <ImageUploader
+                                images={currentItem.image_urls}
+                                onChange={(newImages) => setCurrentItem({ ...currentItem, image_urls: newImages })}
+                                listId={listId}
+                                itemId={currentItem.id}
+                            />
+                        )}
 
                         {/* Bloque de URLs Externas (Links) */}
                         <Typography variant="h6" mt={2}>Enlaces de Compra</Typography>

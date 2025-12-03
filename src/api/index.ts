@@ -231,4 +231,42 @@ export const api = {
             return { error: null };
         },
     },
+    storage: {
+        upload: async (formData: FormData) => {
+            try {
+                // Axios maneja automáticamente el Content-Type para FormData
+                const response = await client.post("/storage?action=upload", formData, {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                });
+                return { data: response.data, error: null };
+            } catch (error: any) {
+                return {
+                    data: null,
+                    error: error.response?.data?.error || error.message,
+                };
+            }
+        },
+        delete: async (path: string) => {
+            try {
+                await client.post("/storage?action=delete", { path });
+                return { error: null };
+            } catch (error: any) {
+                return {
+                    error: error.response?.data?.error || error.message,
+                };
+            }
+        },
+        deleteMultiple: async (paths: string[]) => {
+            try {
+                await client.post("/storage?action=delete-multiple", { paths });
+                return { error: null };
+            } catch (error: any) {
+                return {
+                    error: error.response?.data?.error || error.message,
+                };
+            }
+        },
+    },
 };

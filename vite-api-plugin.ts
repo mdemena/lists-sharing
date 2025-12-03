@@ -6,6 +6,7 @@ import { handler as authHandler } from "./api/auth";
 import { handler as listsHandler } from "./api/lists";
 import { handler as itemsHandler } from "./api/items";
 import { handler as profilesHandler } from "./api/profiles";
+import { handler as storageHandler } from "./api/storage";
 import { loadEnv } from "vite";
 
 export function apiPlugin(): Plugin {
@@ -55,6 +56,11 @@ export function apiPlugin(): Plugin {
                                 path.startsWith("profiles/")
                             ) {
                                 await profilesHandler(req, res);
+                            } else if (
+                                path === "storage" ||
+                                path.startsWith("storage/")
+                            ) {
+                                await storageHandler(req, res);
                             } else {
                                 // Ruta no encontrada
                                 res.writeHead(404, {
