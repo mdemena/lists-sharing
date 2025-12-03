@@ -189,6 +189,16 @@ export const api = {
                 };
             }
         },
+        delete: async (id: string) => {
+            try {
+                await client.delete(`/lists?id=${id}`);
+                return { error: null };
+            } catch (error: any) {
+                return {
+                    error: error.response?.data?.error || error.message,
+                };
+            }
+        },
     },
     items: {
         list: async (listId: string) => {

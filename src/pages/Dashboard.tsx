@@ -28,7 +28,7 @@ import {
     Tabs,
     Tab,
 } from '@mui/material';
-import { FaPlus, FaList, FaShareSquare, FaTh, FaEdit } from 'react-icons/fa';
+import { FaPlus, FaList, FaShareSquare, FaTh, FaEdit, FaTrash } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api';
 import type { List } from '../types'; // Importamos la interfaz List
@@ -131,6 +131,20 @@ const Dashboard: React.FC = () => {
         }
     }
 
+    const handleDeleteList = async (list: List) => {
+        if (!window.confirm(`¿Estás seguro de que quieres eliminar la lista "${list.name}"?`)) return;
+
+        try {
+            const { error } = await api.lists.delete(list.id);
+            if (error) throw new Error(error);
+
+            setLists(lists.filter(l => l.id !== list.id));
+            toast.success('Lista eliminada con éxito');
+        } catch (error: any) {
+            toast.error(error.message || 'Error al eliminar la lista');
+        }
+    };
+
     const handleViewModeChange = (
         _event: React.MouseEvent<HTMLElement>,
         newViewMode: 'grid' | 'table',
@@ -181,6 +195,16 @@ const Dashboard: React.FC = () => {
                         >
                             Editar Lista
                         </Button>
+                        <IconButton
+                            size="small"
+                            color="error"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteList(list);
+                            }}
+                        >
+                            <FaTrash />
+                        </IconButton>
                         <Button
                             size="small"
                             startIcon={<FaShareSquare />}
@@ -333,6 +357,11 @@ const Dashboard: React.FC = () => {
                                                     <Tooltip title="Editar Lista">
                                                         <IconButton size="small" onClick={() => navigate(`/list/${list.id}/edit`)}>
                                                             <FaEdit />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title="Eliminar Lista">
+                                                        <IconButton size="small" color="error" onClick={() => handleDeleteList(list)}>
+                                                            <FaTrash />
                                                         </IconButton>
                                                     </Tooltip>
                                                     <Tooltip title="Compartir">
