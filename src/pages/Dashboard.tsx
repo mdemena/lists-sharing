@@ -164,12 +164,35 @@ const Dashboard: React.FC = () => {
                 boxShadow: 3,
                 transition: '0.2s',
                 cursor: 'pointer',
+                position: 'relative',
                 '&:hover': { boxShadow: 6, transform: 'translateY(-2px)' }
             }}
             onClick={() => navigate(isShared ? `/share/${list.id}` : `/list/${list.id}/edit`)}
         >
+            {!isShared && (
+                <Tooltip title="Eliminar Lista">
+                    <IconButton
+                        size="small"
+                        color="error"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteList(list);
+                        }}
+                        sx={{
+                            position: 'absolute',
+                            top: 8,
+                            right: 8,
+                            zIndex: 1,
+                            bgcolor: 'background.paper',
+                            '&:hover': { bgcolor: 'error.light', color: 'white' }
+                        }}
+                    >
+                        <FaTrash size={12} />
+                    </IconButton>
+                </Tooltip>
+            )}
             <CardContent>
-                <Typography variant="h6" component="h3" mb={1} noWrap>
+                <Typography variant="h6" component="h3" mb={1} noWrap sx={{ pr: 3 }}>
                     {list.name}
                 </Typography>
                 <Typography variant="body2" color="text.secondary" mb={1} noWrap sx={{ WebkitLineClamp: 2 }}>
@@ -195,16 +218,6 @@ const Dashboard: React.FC = () => {
                         >
                             Editar Lista
                         </Button>
-                        <IconButton
-                            size="small"
-                            color="error"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteList(list);
-                            }}
-                        >
-                            <FaTrash />
-                        </IconButton>
                         <Button
                             size="small"
                             startIcon={<FaShareSquare />}
