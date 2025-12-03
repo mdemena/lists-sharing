@@ -221,6 +221,55 @@ export const handler = async (req: IncomingMessage, res: ServerResponse) => {
             return;
         }
 
+        if (req.method === "DELETE") {
+            if (!id) throw new Error("List ID required");
+
+            const { data: { user }, error: userError } = await supabase.auth
+                .getUser();
+            if (userError || !user) {
+                throw userError || new Error("User not found");
+            }
+
+            // 1. Check list ownership and items status
+            // Fetch list items to check for adjudication
+            const { data: items, error: itemsError } = await supabase
+                .from("list_items")
+                .select("is_adjudicated")
+                .eq("list_id", id);
+
+            if (itemsError) throw itemsError;
+
+            // Check if any item is adjudicated
+            const hasAdjudicatedItems = items &&
+                items.some((item: any) => item.is_adjudicated);
+
+            if (hasAdjudicatedItems) {
+                res.statusCode = 400;
+                res.end(
+                    JSON.stringify({
+                        error: "Cannot delete list with adjudicated items.",
+                    }),
+                );
+                return;
+            }
+
+            // 2. Delete the list (Cascading delete should handle items and shares if configured,
+            // otherwise we might need to delete them manually. Assuming cascade for now or manual cleanup if needed)
+            // But first verify ownership implicitly via RLS or explicit check.
+            // We can do an explicit delete with owner_id check to be safe.
+
+            const { error: deleteError } = await supabase
+                .from("lists")
+                .delete()
+                .eq("id", id)
+                .eq("owner_id", user.id); // Ensure user owns the list
+
+            if (deleteError) throw deleteError;
+
+            res.end(JSON.stringify({ success: true }));
+            return;
+        }
+
         // Add PUT/DELETE if needed, though Dashboard.tsx mainly does GET and POST for lists.
         // Dashboard.tsx doesn't seem to have DELETE/UPDATE for lists directly shown in the snippets,
         // but it's good practice to have them or add them when needed.
