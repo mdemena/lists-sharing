@@ -638,7 +638,6 @@ const ListView: React.FC = () => {
                                         e.stopPropagation();
                                         handleDeleteItem(item);
                                     }}
-                                    disabled={item.is_adjudicated}
                                 >
                                     <FaTrash size={14} />
                                 </IconButton>
@@ -930,7 +929,7 @@ const ListView: React.FC = () => {
                                                         <IconButton size="small" onClick={() => handleOpenModal(item)}>
                                                             <FaEdit />
                                                         </IconButton>
-                                                        <IconButton size="small" color="error" onClick={() => handleDeleteItem(item)} disabled={item.is_adjudicated}>
+                                                        <IconButton size="small" color="error" onClick={() => handleDeleteItem(item)}>
                                                             <FaTrash />
                                                         </IconButton>
                                                     </>
