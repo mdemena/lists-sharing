@@ -323,26 +323,63 @@ const Dashboard: React.FC = () => {
             onClick={() => navigate(isShared ? `/share/${list.id}` : `/list/${list.id}/edit`)}
         >
             {!isShared && (
-                <Tooltip title="Eliminar Lista">
-                    <IconButton
-                        size="small"
-                        color="error"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteList(list);
-                        }}
-                        sx={{
-                            position: 'absolute',
-                            top: 8,
-                            right: 8,
-                            zIndex: 1,
-                            bgcolor: 'background.paper',
-                            '&:hover': { bgcolor: 'error.light', color: 'white' }
-                        }}
-                    >
-                        <FaTrash size={12} />
-                    </IconButton>
-                </Tooltip>
+                <Stack 
+                    direction="row" 
+                    spacing={0.5}
+                    sx={{
+                        position: 'absolute',
+                        top: 8,
+                        right: 8,
+                        zIndex: 1,
+                    }}
+                >
+                    <Tooltip title="Exportar">
+                        <IconButton
+                            size="small"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleExportList(list, 'excel');
+                            }}
+                            sx={{
+                                bgcolor: 'background.paper',
+                                '&:hover': { bgcolor: 'primary.light', color: 'white' }
+                            }}
+                        >
+                            <FaDownload size={12} />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Enviar por Email">
+                        <IconButton
+                            size="small"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenEmailDialog(list);
+                            }}
+                            sx={{
+                                bgcolor: 'background.paper',
+                                '&:hover': { bgcolor: 'info.light', color: 'white' }
+                            }}
+                        >
+                            <FaEnvelope size={12} />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Eliminar Lista">
+                        <IconButton
+                            size="small"
+                            color="error"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteList(list);
+                            }}
+                            sx={{
+                                bgcolor: 'background.paper',
+                                '&:hover': { bgcolor: 'error.light', color: 'white' }
+                            }}
+                        >
+                            <FaTrash size={12} />
+                        </IconButton>
+                    </Tooltip>
+                </Stack>
             )}
             <CardContent>
                 <Typography variant="h6" component="h3" mb={1} noWrap sx={{ pr: 3 }}>
@@ -383,28 +420,6 @@ const Dashboard: React.FC = () => {
                         >
                             Compartir {list.list_shares?.[0]?.count ? `(${list.list_shares[0].count})` : ''}
                         </Button>
-                        <Tooltip title="Exportar">
-                            <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleExportList(list, 'excel');
-                                }}
-                            >
-                                <FaDownload size={12} />
-                            </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Enviar por Email">
-                            <IconButton
-                                size="small"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleOpenEmailDialog(list);
-                                }}
-                            >
-                                <FaEnvelope size={12} />
-                            </IconButton>
-                        </Tooltip>
                     </>
                 ) : (
                     <Button
@@ -547,11 +562,6 @@ const Dashboard: React.FC = () => {
                                                             <FaEdit />
                                                         </IconButton>
                                                     </Tooltip>
-                                                    <Tooltip title="Eliminar Lista">
-                                                        <IconButton size="small" color="error" onClick={() => handleDeleteList(list)}>
-                                                            <FaTrash />
-                                                        </IconButton>
-                                                    </Tooltip>
                                                     <Tooltip title="Compartir">
                                                         <IconButton size="small" color="secondary" onClick={() => handleShareClick(list)}>
                                                             <FaShareSquare />
@@ -565,6 +575,11 @@ const Dashboard: React.FC = () => {
                                                     <Tooltip title="Enviar por Email">
                                                         <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleOpenEmailDialog(list); }}>
                                                             <FaEnvelope />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title="Eliminar Lista">
+                                                        <IconButton size="small" color="error" onClick={() => handleDeleteList(list)}>
+                                                            <FaTrash />
                                                         </IconButton>
                                                     </Tooltip>
                                                 </>
