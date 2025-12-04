@@ -770,11 +770,11 @@ const Dashboard: React.FC = () => {
                 onClose={handleExportClose}
                 anchorOrigin={{
                     vertical: 'bottom',
-                    horizontal: 'right',
+                    horizontal: 'left',
                 }}
                 transformOrigin={{
                     vertical: 'top',
-                    horizontal: 'right',
+                    horizontal: 'left',
                 }}
             >
                 <MenuItem onClick={() => handleExportWithFormat('csv')}>CSV</MenuItem>
