@@ -1,86 +1,12 @@
 // frontend/src/pages/Home.tsx
 
 import React from 'react';
-import { Box, Typography, Button, Container, Stack, Paper, Grid } from '@mui/material';
+import { Box, Typography, Button, Container, Stack, Grid } from '@mui/material';
 import { Link, Navigate } from 'react-router-dom';
-import { FaGift, FaShareAlt, FaLock, FaUsers } from 'react-icons/fa'; // Iconos representativos
-import { useAuth } from '../contexts/AuthContext'; // Para verificar si el usuario está logueado
+import { FaGift, FaShareAlt, FaLock, FaUsers } from 'react-icons/fa';
+import { useAuth } from '../contexts/AuthContext';
+import { FeatureCard, UseCaseCard } from '../components/cards';
 
-interface FeatureProps {
-    icon: React.ElementType; // Usamos React.ElementType para los iconos de Fa*
-    title: string;
-    text: string;
-}
-
-interface UseCaseProps {
-    emoji: string;
-    title: string;
-    situation: string;
-    solution: string;
-}
-
-const Feature: React.FC<FeatureProps> = ({ icon: Icon, title, text }) => (
-    <Paper
-        elevation={0}
-        sx={{
-            p: 3,
-            textAlign: 'center',
-            display: 'flex',
-            flexDirection: 'column', // Columna vertical
-            alignItems: 'center',
-            justifyContent: 'flex-start', // Dejar el espacio libre en la parte inferior
-            height: '100%', // Crucial para que el Grid stretch funcione
-            border: '1px solid',
-            borderColor: 'divider',
-            borderRadius: 2,
-            bgcolor: 'background.paper'
-        }}
-    >
-        <Box sx={{ color: 'primary.main', mb: 2 }}>
-            <Icon size={40} />
-        </Box>
-        <Typography variant="h6" component="h3" mb={1}>{title}</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1 }}>{text}</Typography>
-    </Paper>
-);
-
-const UseCase: React.FC<UseCaseProps> = ({ emoji, title, situation, solution }) => (
-    <Paper
-        elevation={2}
-        sx={{
-            p: 3,
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            borderRadius: 2,
-            bgcolor: 'background.paper',
-            transition: 'transform 0.2s, box-shadow 0.2s',
-            '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: 6
-            }
-        }}
-    >
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <Box sx={{ fontSize: '2rem', mr: 2 }}>{emoji}</Box>
-            <Typography variant="h6" component="h3" fontWeight="bold">
-                {title}
-            </Typography>
-        </Box>
-        <Typography variant="body2" color="text.primary" fontWeight="medium" mb={1}>
-            Situación:
-        </Typography>
-        <Typography variant="body2" color="text.secondary" mb={2}>
-            {situation}
-        </Typography>
-        <Typography variant="body2" color="text.primary" fontWeight="medium" mb={1}>
-            Solución:
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ flexGrow: 1 }}>
-            {solution}
-        </Typography>
-    </Paper>
-);
 
 const Home: React.FC = () => {
     const { user, loading } = useAuth();
@@ -161,28 +87,28 @@ const Home: React.FC = () => {
                     alignItems="stretch"
                 >
                     <Box flex={1}>
-                        <Feature
+                        <FeatureCard
                             icon={FaGift}
                             title="Adjudicación Ciega"
                             text="Los invitados pueden reservar un ítem sin que el creador de la lista sepa quién lo reservó."
                         />
                     </Box>
                     <Box flex={1}>
-                        <Feature
+                        <FeatureCard
                             icon={FaShareAlt}
                             title="Compartir Fácil"
                             text="Envía invitaciones por email con enlaces personalizados a cualquier familiar o amigo."
                         />
                     </Box>
                     <Box flex={1}>
-                        <Feature
+                        <FeatureCard
                             icon={FaLock}
                             title="Restricciones Seguras"
                             text="El creador no puede eliminar ítems que ya han sido adjudicados por un invitado."
                         />
                     </Box>
                     <Box flex={1}>
-                        <Feature
+                        <FeatureCard
                             icon={FaUsers}
                             title="Colaboración Total"
                             text="Múltiples usuarios pueden ver el estado de la lista y evitar regalos duplicados."
@@ -214,7 +140,7 @@ const Home: React.FC = () => {
                     </Typography>
                     <Grid container spacing={3}>
                         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-                            <UseCase
+                            <UseCaseCard
                                 emoji="🎂"
                                 title="Cumpleaños"
                                 situation="Se acerca tu cumpleaños y quieres evitar recibir regalos que no necesitas o duplicados."
@@ -222,7 +148,7 @@ const Home: React.FC = () => {
                             />
                         </Grid>
                         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-                            <UseCase
+                            <UseCaseCard
                                 emoji="👰"
                                 title="Bodas y eventos especiales"
                                 situation="Estás organizando tu boda y prefieres regalos específicos o contribuciones concretas."
@@ -230,7 +156,7 @@ const Home: React.FC = () => {
                             />
                         </Grid>
                         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-                            <UseCase
+                            <UseCaseCard
                                 emoji="🎄"
                                 title="Navidad familiar"
                                 situation="En tu familia hacen amigo invisible o intercambio de regalos y quieren acertar con los gustos de cada uno."
@@ -238,7 +164,7 @@ const Home: React.FC = () => {
                             />
                         </Grid>
                         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-                            <UseCase
+                            <UseCaseCard
                                 emoji="👶"
                                 title="Baby shower"
                                 situation="Estás esperando un bebé y tus amigos quieren ayudarte con lo que realmente necesitas."
@@ -246,7 +172,7 @@ const Home: React.FC = () => {
                             />
                         </Grid>
                         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-                            <UseCase
+                            <UseCaseCard
                                 emoji="🎓"
                                 title="Graduación"
                                 situation="Te gradúas y familiares y amigos quieren celebrarlo con regalos útiles para tu siguiente etapa."
@@ -254,7 +180,7 @@ const Home: React.FC = () => {
                             />
                         </Grid>
                         <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-                            <UseCase
+                            <UseCaseCard
                                 emoji="🎮"
                                 title="Wishlist de coleccionista"
                                 situation="Coleccionas algo específico (videojuegos, libros, figuras) y tus amigos quieren regalarte algo de tu colección."
