@@ -192,11 +192,7 @@ const Home: React.FC = () => {
             </Container>
 
             {/* --- Sección de Casos de Uso --- */}
-            <Box sx={(theme) => ({ 
-                bgcolor: theme.palette.mode === 'dark' ? 'background.paper' : 'grey.50', 
-                py: 8 
-            })}>
-                <Container maxWidth="lg">
+            <Container maxWidth="lg" sx={{ py: 8 }}>
                     <Typography
                         variant="h4"
                         component="h2"
@@ -266,8 +262,7 @@ const Home: React.FC = () => {
                             />
                         </Grid>
                     </Grid>
-                </Container>
-            </Box>
+            </Container>
         </Box>
     );
 };
