@@ -448,9 +448,11 @@ const ListView: React.FC = () => {
                         {AdjudicationStatus}
                     </Stack>
 
-                    <Typography variant="body2" color="text.secondary" mb={2} noWrap sx={{ overflow: 'hidden', textOverflow: 'ellipsis', WebkitLineClamp: 3 }}>
-                        {item.description || 'Sin descripción.'}
-                    </Typography>
+                    <Tooltip title={item.description || ''} arrow>
+                        <Typography variant="body2" color="text.secondary" mb={2} noWrap sx={{ overflow: 'hidden', textOverflow: 'ellipsis', WebkitLineClamp: 3 }}>
+                            {item.description || 'Sin descripción.'}
+                        </Typography>
+                    </Tooltip>
 
                     <Stack direction="row" spacing={2} alignItems="center" fontSize="small" mb={2}>
                         <Stack direction="row" alignItems="center" spacing={0.5}>
@@ -620,14 +622,16 @@ const ListView: React.FC = () => {
                     </ToggleButton>
                 </ToggleButtonGroup>
             </Stack>
-            <Typography variant="h6" color="text.secondary" mb={4}>
-                {isOwnerMode ? `Modo Edición` : `Lista Compartida`}: {list.description}
-                {!isOwnerMode && list.shared_by_name && (
-                    <Typography component="span" variant="body2" sx={{ display: 'block', fontStyle: 'italic', mt: 1 }}>
-                        Compartida por: {list.shared_by_name}
-                    </Typography>
-                )}
-            </Typography>
+            <Tooltip title={list.description || ''} arrow>
+                <Typography variant="h6" color="text.secondary" mb={4} noWrap sx={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {isOwnerMode ? `Modo Edición` : `Lista Compartida`}: {list.description}
+                    {!isOwnerMode && list.shared_by_name && (
+                        <Typography component="span" variant="body2" sx={{ display: 'block', fontStyle: 'italic', mt: 1 }}>
+                            Compartida por: {list.shared_by_name}
+                        </Typography>
+                    )}
+                </Typography>
+            </Tooltip>
 
             {isOwnerMode && (
                 <Button variant="contained" color="primary" startIcon={<FaPlus />} sx={{ mb: 4 }} onClick={() => handleOpenModal()}>
@@ -699,7 +703,9 @@ const ListView: React.FC = () => {
                                             </Box>
                                         </TableCell>
                                         <TableCell sx={{ maxWidth: 300, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                            {item.description || '-'}
+                                            <Tooltip title={item.description || ''} arrow>
+                                                <span>{item.description || '-'}</span>
+                                            </Tooltip>
                                         </TableCell>
                                         <TableCell align="right">{priorities.find(p => p.id === item.importance)?.name || 'N/A'}</TableCell>
                                         <TableCell align="right">€{item.estimated_cost?.toFixed(2) || 'N/A'}</TableCell>
