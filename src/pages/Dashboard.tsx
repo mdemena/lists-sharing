@@ -768,6 +768,14 @@ const Dashboard: React.FC = () => {
                 anchorEl={anchorElExport}
                 open={Boolean(anchorElExport)}
                 onClose={handleExportClose}
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}
             >
                 <MenuItem onClick={() => handleExportWithFormat('csv')}>CSV</MenuItem>
                 <MenuItem onClick={() => handleExportWithFormat('excel')}>Excel</MenuItem>
