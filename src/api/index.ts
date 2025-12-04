@@ -199,6 +199,17 @@ export const api = {
                 };
             }
         },
+        sendListFile: async (data: any) => {
+            try {
+                const response = await client.post("/send-list-file", data);
+                return { data: response.data, error: null };
+            } catch (error: any) {
+                return {
+                    data: null,
+                    error: error.response?.data?.error || error.message,
+                };
+            }
+        },
     },
     items: {
         list: async (listId: string) => {

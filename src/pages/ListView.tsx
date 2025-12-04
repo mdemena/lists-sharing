@@ -33,8 +33,14 @@ import {
     Avatar,
     useTheme,
     alpha,
+    Menu,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
 } from '@mui/material';
-import { FaTrash, FaEdit, FaCheck, FaTimes, FaPlus, FaEuroSign, FaStar, FaExternalLinkAlt, FaTh, FaList } from 'react-icons/fa';
+import { FaTrash, FaEdit, FaCheck, FaTimes, FaPlus, FaEuroSign, FaStar, FaExternalLinkAlt, FaTh, FaList, FaDownload, FaEnvelope } from 'react-icons/fa';
+import * as XLSX from 'xlsx';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api';
 import type { List, ListItem, ImageUrl, ExternalUrl } from '../types'; // Importamos los tipos
@@ -162,6 +168,135 @@ const ListView: React.FC = () => {
     // --- Lógica de Manejo de Modales ---
     const handleOpen = () => setModalOpen(true);
     const handleClose = () => setModalOpen(false);
+
+    // --- Lógica de Exportación ---
+    const [anchorElExport, setAnchorElExport] = useState<null | HTMLElement>(null);
+    const openExport = Boolean(anchorElExport);
+    const handleExportClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorElExport(event.currentTarget);
+    };
+    const handleExportClose = () => {
+        setAnchorElExport(null);
+    };
+
+    // --- Lógica de Email ---
+    const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+    const [recipientEmail, setRecipientEmail] = useState('');
+    const [exportFormat, setExportFormat] = useState<'json' | 'csv' | 'excel'>('excel');
+    const [isSendingEmail, setIsSendingEmail] = useState(false);
+
+    const handleOpenEmailDialog = () => {
+        setEmailDialogOpen(true);
+        handleExportClose();
+    };
+
+    const handleSendEmail = async () => {
+        if (!recipientEmail) {
+            toast.error('Por favor, introduce un email.');
+            return;
+        }
+        setIsSendingEmail(true);
+
+        try {
+            const exportData = items.map(item => ({
+                Nombre: item.name,
+                Descripción: item.description,
+                Importancia: priorities.find(p => p.id === item.importance)?.name || 'N/A',
+                Coste: item.estimated_cost,
+                Estado: item.is_adjudicated ? 'Adjudicado' : 'Disponible',
+                AdjudicadoPor: item.adjudicated_by || '',
+                URLs: item.urls?.map(u => u.url).join(', ') || '',
+            }));
+
+            const fileName = `${list?.name.replace(/\s+/g, '_')}_export`;
+            let content = '';
+            let fileExtension = '';
+
+            if (exportFormat === 'json') {
+                content = btoa(unescape(encodeURIComponent(JSON.stringify(items, null, 2))));
+                fileExtension = 'json';
+            } else if (exportFormat === 'csv') {
+                const worksheet = XLSX.utils.json_to_sheet(exportData);
+                const csvOutput = XLSX.utils.sheet_to_csv(worksheet);
+                content = btoa(unescape(encodeURIComponent(csvOutput)));
+                fileExtension = 'csv';
+            } else if (exportFormat === 'excel') {
+                const worksheet = XLSX.utils.json_to_sheet(exportData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Items");
+                const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+                // Convert array buffer to base64
+                let binary = '';
+                const bytes = new Uint8Array(excelBuffer);
+                const len = bytes.byteLength;
+                for (let i = 0; i < len; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                content = btoa(binary);
+                fileExtension = 'xlsx';
+            }
+
+            const result = await api.lists.sendListFile({
+                recipientEmail,
+                subject: `Archivo de lista: ${list?.name}`,
+                htmlContent: `<p>Adjunto encontrarás la lista <strong>${list?.name}</strong> en formato ${exportFormat.toUpperCase()}.</p>`,
+                attachment: {
+                    name: `${fileName}.${fileExtension}`,
+                    content: content,
+                },
+            });
+
+            if (result.error) throw new Error(result.error);
+            toast.success('Email enviado correctamente.');
+            setEmailDialogOpen(false);
+            setRecipientEmail('');
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || 'Error al enviar el email.');
+        } finally {
+            setIsSendingEmail(false);
+        }
+    };
+
+    const handleExport = (type: 'json' | 'csv' | 'excel') => {
+        if (!list || items.length === 0) return;
+
+        const exportData = items.map(item => ({
+            Nombre: item.name,
+            Descripción: item.description,
+            Importancia: priorities.find(p => p.id === item.importance)?.name || 'N/A',
+            Coste: item.estimated_cost,
+            Estado: item.is_adjudicated ? 'Adjudicado' : 'Disponible',
+            AdjudicadoPor: item.adjudicated_by || '',
+            URLs: item.urls?.map(u => u.url).join(', ') || '',
+        }));
+
+        const fileName = `${list.name.replace(/\s+/g, '_')}_export`;
+
+        if (type === 'json') {
+            const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(
+                JSON.stringify(items, null, 2)
+            )}`;
+            const link = document.createElement('a');
+            link.href = jsonString;
+            link.download = `${fileName}.json`;
+            link.click();
+        } else if (type === 'csv') {
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const csvOutput = XLSX.utils.sheet_to_csv(worksheet);
+            const blob = new Blob([csvOutput], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${fileName}.csv`;
+            link.click();
+        } else if (type === 'excel') {
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Items");
+            XLSX.writeFile(workbook, `${fileName}.xlsx`);
+        }
+        handleExportClose();
+    };
 
     // --- Lógica de Carga de Datos ---
     const fetchListData = async () => {
@@ -634,10 +769,66 @@ const ListView: React.FC = () => {
             </Tooltip>
 
             {isOwnerMode && (
-                <Button variant="contained" color="primary" startIcon={<FaPlus />} sx={{ mb: 4 }} onClick={() => handleOpenModal()}>
-                    Añadir Nuevo Ítem
-                </Button>
+                <Stack direction="row" spacing={2} mb={4}>
+                    <Button variant="contained" color="primary" startIcon={<FaPlus />} onClick={() => handleOpenModal()}>
+                        Añadir Nuevo Ítem
+                    </Button>
+                    <Button
+                        variant="outlined"
+                        startIcon={<FaDownload />}
+                        onClick={handleExportClick}
+                    >
+                        Exportar
+                    </Button>
+                    <Menu
+                        anchorEl={anchorElExport}
+                        open={openExport}
+                        onClose={handleExportClose}
+                    >
+                        <MenuItem onClick={() => handleExport('csv')}>CSV</MenuItem>
+                        <MenuItem onClick={() => handleExport('excel')}>Excel</MenuItem>
+                        <MenuItem onClick={() => handleExport('json')}>JSON</MenuItem>
+                        <MenuItem onClick={handleOpenEmailDialog} sx={{ borderTop: '1px solid #eee', color: 'primary.main' }}>
+                            <FaEnvelope style={{ marginRight: 8 }} /> Enviar por Email
+                        </MenuItem>
+                    </Menu>
+                </Stack>
             )}
+
+            {/* Email Dialog */}
+            <Dialog open={emailDialogOpen} onClose={() => setEmailDialogOpen(false)}>
+                <DialogTitle>Enviar Lista por Email</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2} sx={{ mt: 1, minWidth: 300 }}>
+                        <TextField
+                            autoFocus
+                            label="Email del Destinatario"
+                            type="email"
+                            fullWidth
+                            value={recipientEmail}
+                            onChange={(e) => setRecipientEmail(e.target.value)}
+                        />
+                        <FormControl fullWidth>
+                            <InputLabel>Formato</InputLabel>
+                            <Select
+                                value={exportFormat}
+                                label="Formato"
+                                onChange={(e) => setExportFormat(e.target.value as any)}
+                            >
+                                <MenuItem value="excel">Excel (.xlsx)</MenuItem>
+                                <MenuItem value="csv">CSV (.csv)</MenuItem>
+                                <MenuItem value="json">JSON (.json)</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setEmailDialogOpen(false)}>Cancelar</Button>
+                    <Button onClick={handleSendEmail} variant="contained" disabled={isSendingEmail}>
+                        {isSendingEmail ? <CircularProgress size={24} /> : 'Enviar'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             {viewMode === 'grid' ? (
                 <Grid container spacing={3}>
