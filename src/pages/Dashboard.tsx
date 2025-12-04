@@ -83,6 +83,10 @@ const Dashboard: React.FC = () => {
     const [anchorElExport, setAnchorElExport] = useState<null | HTMLElement>(null);
     const [listToExportFormat, setListToExportFormat] = useState<List | null>(null);
 
+    // Estado para diálogo de confirmación de eliminación
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [listToDelete, setListToDelete] = useState<List | null>(null);
+
     // URL de la API del backend (a través del proxy de Vite)
     // const BACKEND_API_URL = '';
     // --- Lógica de Carga de Datos ---
@@ -151,16 +155,24 @@ const Dashboard: React.FC = () => {
     }
 
     const handleDeleteList = async (list: List) => {
-        if (!window.confirm(`¿Estás seguro de que quieres eliminar la lista "${list.name}"?`)) return;
+        setListToDelete(list);
+        setDeleteDialogOpen(true);
+    };
+
+    const confirmDeleteList = async () => {
+        if (!listToDelete) return;
 
         try {
-            const { error } = await api.lists.delete(list.id);
+            const { error } = await api.lists.delete(listToDelete.id);
             if (error) throw new Error(error);
 
-            setLists(lists.filter(l => l.id !== list.id));
+            setLists(lists.filter(l => l.id !== listToDelete.id));
             toast.success('Lista eliminada con éxito');
         } catch (error: any) {
             toast.error(error.message || 'Error al eliminar la lista');
+        } finally {
+            setDeleteDialogOpen(false);
+            setListToDelete(null);
         }
     };
 
@@ -791,6 +803,36 @@ const Dashboard: React.FC = () => {
                     list={listToShare}
                 />
             )}
+
+            {/* --- Diálogo de Confirmación de Eliminación --- */}
+            <Dialog
+                open={deleteDialogOpen}
+                onClose={() => {
+                    setDeleteDialogOpen(false);
+                    setListToDelete(null);
+                }}
+            >
+                <DialogTitle>Confirmar Eliminación</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        ¿Estás seguro de que quieres eliminar la lista <strong>"{listToDelete?.name}"</strong>?
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        Esta acción no se puede deshacer.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => {
+                        setDeleteDialogOpen(false);
+                        setListToDelete(null);
+                    }}>
+                        Cancelar
+                    </Button>
+                    <Button onClick={confirmDeleteList} variant="contained" color="error">
+                        Eliminar
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Container>
     );
 };

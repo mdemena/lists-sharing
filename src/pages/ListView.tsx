@@ -185,6 +185,10 @@ const ListView: React.FC = () => {
     const [exportFormat, setExportFormat] = useState<'json' | 'csv' | 'excel'>('excel');
     const [isSendingEmail, setIsSendingEmail] = useState(false);
 
+    // Estado para diálogo de confirmación de eliminación de ítem
+    const [deleteItemDialogOpen, setDeleteItemDialogOpen] = useState(false);
+    const [itemToDelete, setItemToDelete] = useState<ListItem | null>(null);
+
     const handleOpenEmailDialog = () => {
         setEmailDialogOpen(true);
         handleExportClose();
@@ -482,17 +486,25 @@ const ListView: React.FC = () => {
             return;
         }
 
-        if (!window.confirm(`¿Estás seguro de que quieres eliminar "${item.name}"?`)) return;
+        setItemToDelete(item);
+        setDeleteItemDialogOpen(true);
+    };
+
+    const confirmDeleteItem = async () => {
+        if (!itemToDelete) return;
 
         try {
-            const { error } = await api.items.delete(item.id);
+            const { error } = await api.items.delete(itemToDelete.id);
 
             if (error) throw new Error(error);
 
-            setItems(items.filter(i => i.id !== item.id));
+            setItems(items.filter(i => i.id !== itemToDelete.id));
             toast.success('Ítem eliminado.');
         } catch (error: any) {
             toast.error(error.message || 'Error al eliminar el elemento.');
+        } finally {
+            setDeleteItemDialogOpen(false);
+            setItemToDelete(null);
         }
     };
 
@@ -1109,6 +1121,36 @@ const ListView: React.FC = () => {
                 onLogin={handleAuthDialogLogin}
                 onSignup={handleAuthDialogSignup}
             />
+
+            {/* --- Diálogo de Confirmación de Eliminación de Ítem --- */}
+            <Dialog
+                open={deleteItemDialogOpen}
+                onClose={() => {
+                    setDeleteItemDialogOpen(false);
+                    setItemToDelete(null);
+                }}
+            >
+                <DialogTitle>Confirmar Eliminación</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        ¿Estás seguro de que quieres eliminar el elemento <strong>"{itemToDelete?.name}"</strong>?
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        Esta acción no se puede deshacer.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => {
+                        setDeleteItemDialogOpen(false);
+                        setItemToDelete(null);
+                    }}>
+                        Cancelar
+                    </Button>
+                    <Button onClick={confirmDeleteItem} variant="contained" color="error">
+                        Eliminar
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };

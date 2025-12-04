@@ -281,12 +281,43 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <Router>
         <AuthProvider>
           <Toaster
-            position="top-right"
+            position="top-center"
+            gutter={12}
+            containerStyle={{
+              top: 80, // Below navbar
+            }}
             toastOptions={{
               duration: 4000,
               style: {
-                background: 'var(--toast-bg)',
-                color: 'var(--toast-color)',
+                background: '#1e293b',
+                color: '#f1f5f9',
+                padding: '16px 24px',
+                borderRadius: '12px',
+                fontSize: '14px',
+                fontWeight: 500,
+                boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                maxWidth: '400px',
+              },
+              success: {
+                iconTheme: {
+                  primary: '#10b981',
+                  secondary: '#f1f5f9',
+                },
+                style: {
+                  background: '#064e3b',
+                  border: '1px solid #10b981',
+                },
+              },
+              error: {
+                iconTheme: {
+                  primary: '#ef4444',
+                  secondary: '#f1f5f9',
+                },
+                style: {
+                  background: '#7f1d1d',
+                  border: '1px solid #ef4444',
+                },
               },
             }}
           />
