@@ -74,7 +74,6 @@ const Dashboard: React.FC = () => {
     const [sharedLists, setSharedLists] = useState<List[]>([]);
 
     // Export state
-    const [exportingListId, setExportingListId] = useState<string | null>(null);
     const [emailDialogOpen, setEmailDialogOpen] = useState(false);
     const [recipientEmail, setRecipientEmail] = useState('');
     const [exportFormat, setExportFormat] = useState<'json' | 'csv' | 'excel'>('excel');
@@ -173,7 +172,6 @@ const Dashboard: React.FC = () => {
 
     // Export handlers
     const handleExportList = async (list: List, format: 'json' | 'csv' | 'excel') => {
-        setExportingListId(list.id);
         try {
             // Fetch items for this list
             const { data: itemsData, error } = await api.items.list(list.id);
@@ -223,8 +221,6 @@ const Dashboard: React.FC = () => {
             toast.success('Lista exportada correctamente');
         } catch (error: any) {
             toast.error(error.message || 'Error al exportar la lista');
-        } finally {
-            setExportingListId(null);
         }
     };
 
