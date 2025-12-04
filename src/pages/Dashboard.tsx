@@ -35,6 +35,7 @@ import {
     InputLabel,
     Select,
     MenuItem,
+    Menu,
 } from '@mui/material';
 import { FaPlus, FaList, FaShareSquare, FaTh, FaEdit, FaTrash, FaDownload, FaEnvelope } from 'react-icons/fa';
 import * as XLSX from 'xlsx';
@@ -79,6 +80,8 @@ const Dashboard: React.FC = () => {
     const [exportFormat, setExportFormat] = useState<'json' | 'csv' | 'excel'>('excel');
     const [isSendingEmail, setIsSendingEmail] = useState(false);
     const [listToExport, setListToExport] = useState<List | null>(null);
+    const [anchorElExport, setAnchorElExport] = useState<null | HTMLElement>(null);
+    const [listToExportFormat, setListToExportFormat] = useState<List | null>(null);
 
     // URL de la API del backend (a través del proxy de Vite)
     // const BACKEND_API_URL = '';
@@ -171,7 +174,7 @@ const Dashboard: React.FC = () => {
     };
 
     // Export handlers
-    const handleExportList = async (list: List, format: 'json' | 'csv' | 'excel') => {
+    const handleExportList = async (list: List, format: 'json' | 'csv' | 'excel', isShared: boolean = false) => {
         try {
             // Fetch items for this list
             const { data: itemsData, error } = await api.items.list(list.id);
@@ -184,15 +187,25 @@ const Dashboard: React.FC = () => {
                 { id: 1, name: 'Opcional' },
             ];
 
-            const exportData = items.map((item: any) => ({
-                Nombre: item.name,
-                Descripción: item.description,
-                Importancia: priorities.find(p => p.id === item.importance)?.name || 'N/A',
-                Coste: item.estimated_cost,
-                Estado: item.is_adjudicated ? 'Adjudicado' : 'Disponible',
-                AdjudicadoPor: item.adjudicated_by || '',
-                URLs: item.urls?.map((u: any) => u.url).join(', ') || '',
-            }));
+            const exportData = items.map((item: any) => {
+                const baseData = {
+                    Nombre: item.name,
+                    Descripción: item.description,
+                    Importancia: priorities.find(p => p.id === item.importance)?.name || 'N/A',
+                    Coste: item.estimated_cost,
+                    URLs: item.urls?.map((u: any) => u.url).join(', ') || '',
+                };
+                
+                // Add Estado field only for shared lists
+                if (isShared) {
+                    return {
+                        ...baseData,
+                        Estado: item.is_adjudicated ? 'Adjudicado' : 'Disponible',
+                    };
+                }
+                
+                return baseData;
+            });
 
             const fileName = `${list.name.replace(/\s+/g, '_')}_export`;
 
@@ -248,15 +261,28 @@ const Dashboard: React.FC = () => {
                 { id: 1, name: 'Opcional' },
             ];
 
-            const exportData = items.map((item: any) => ({
-                Nombre: item.name,
-                Descripción: item.description,
-                Importancia: priorities.find(p => p.id === item.importance)?.name || 'N/A',
-                Coste: item.estimated_cost,
-                Estado: item.is_adjudicated ? 'Adjudicado' : 'Disponible',
-                AdjudicadoPor: item.adjudicated_by || '',
-                URLs: item.urls?.map((u: any) => u.url).join(', ') || '',
-            }));
+            // Check if we're on the shared lists tab
+            const isShared = activeTab === 1;
+
+            const exportData = items.map((item: any) => {
+                const baseData = {
+                    Nombre: item.name,
+                    Descripción: item.description,
+                    Importancia: priorities.find(p => p.id === item.importance)?.name || 'N/A',
+                    Coste: item.estimated_cost,
+                    URLs: item.urls?.map((u: any) => u.url).join(', ') || '',
+                };
+                
+                // Add Estado field only for shared lists
+                if (isShared) {
+                    return {
+                        ...baseData,
+                        Estado: item.is_adjudicated ? 'Adjudicado' : 'Disponible',
+                    };
+                }
+                
+                return baseData;
+            });
 
             const fileName = `${listToExport.name.replace(/\s+/g, '_')}_export`;
             let content = '';
@@ -307,6 +333,26 @@ const Dashboard: React.FC = () => {
         }
     };
 
+    const handleExportClick = (event: React.MouseEvent<HTMLButtonElement>, list: List) => {
+        event.stopPropagation();
+        setAnchorElExport(event.currentTarget);
+        setListToExportFormat(list);
+    };
+
+    const handleExportClose = () => {
+        setAnchorElExport(null);
+        setListToExportFormat(null);
+    };
+
+    const handleExportWithFormat = (format: 'json' | 'csv' | 'excel') => {
+        if (listToExportFormat) {
+            // Check if we're on the shared lists tab
+            const isShared = activeTab === 1;
+            handleExportList(listToExportFormat, format, isShared);
+        }
+        handleExportClose();
+    };
+
     // --- JSX de Componentes ---
 
     const ListCard: React.FC<{ list: List; isShared?: boolean }> = ({ list, isShared }) => (
@@ -322,7 +368,7 @@ const Dashboard: React.FC = () => {
             }}
             onClick={() => navigate(isShared ? `/share/${list.id}` : `/list/${list.id}/edit`)}
         >
-            {!isShared && (
+            {!isShared ? (
                 <Stack 
                     direction="row" 
                     spacing={0.5}
@@ -336,10 +382,7 @@ const Dashboard: React.FC = () => {
                     <Tooltip title="Exportar">
                         <IconButton
                             size="small"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleExportList(list, 'excel');
-                            }}
+                            onClick={(e) => handleExportClick(e, list)}
                             sx={{
                                 bgcolor: 'background.paper',
                                 '&:hover': { bgcolor: 'primary.light', color: 'white' }
@@ -377,6 +420,45 @@ const Dashboard: React.FC = () => {
                             }}
                         >
                             <FaTrash size={12} />
+                        </IconButton>
+                    </Tooltip>
+                </Stack>
+            ) : (
+                <Stack 
+                    direction="row" 
+                    spacing={0.5}
+                    sx={{
+                        position: 'absolute',
+                        top: 8,
+                        right: 8,
+                        zIndex: 1,
+                    }}
+                >
+                    <Tooltip title="Exportar">
+                        <IconButton
+                            size="small"
+                            onClick={(e) => handleExportClick(e, list)}
+                            sx={{
+                                bgcolor: 'background.paper',
+                                '&:hover': { bgcolor: 'primary.light', color: 'white' }
+                            }}
+                        >
+                            <FaDownload size={12} />
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Enviar por Email">
+                        <IconButton
+                            size="small"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenEmailDialog(list);
+                            }}
+                            sx={{
+                                bgcolor: 'background.paper',
+                                '&:hover': { bgcolor: 'info.light', color: 'white' }
+                            }}
+                        >
+                            <FaEnvelope size={12} />
                         </IconButton>
                     </Tooltip>
                 </Stack>
@@ -568,7 +650,7 @@ const Dashboard: React.FC = () => {
                                                         </IconButton>
                                                     </Tooltip>
                                                     <Tooltip title="Exportar">
-                                                        <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleExportList(list, 'excel'); }}>
+                                                        <IconButton size="small" onClick={(e) => handleExportClick(e, list)}>
                                                             <FaDownload />
                                                         </IconButton>
                                                     </Tooltip>
@@ -584,11 +666,23 @@ const Dashboard: React.FC = () => {
                                                     </Tooltip>
                                                 </>
                                             ) : (
-                                                <Tooltip title="Ver Lista">
-                                                    <IconButton size="small" color="primary" onClick={() => navigate(`/share/${list.id}`)}>
-                                                        <FaList />
-                                                    </IconButton>
-                                                </Tooltip>
+                                                <>
+                                                    <Tooltip title="Ver Lista">
+                                                        <IconButton size="small" color="primary" onClick={() => navigate(`/share/${list.id}`)}>
+                                                            <FaList />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title="Exportar">
+                                                        <IconButton size="small" onClick={(e) => handleExportClick(e, list)}>
+                                                            <FaDownload />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title="Enviar por Email">
+                                                        <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleOpenEmailDialog(list); }}>
+                                                            <FaEnvelope />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </>
                                             )}
                                         </Stack>
                                     </TableCell>
@@ -668,6 +762,17 @@ const Dashboard: React.FC = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Export Format Menu */}
+            <Menu
+                anchorEl={anchorElExport}
+                open={Boolean(anchorElExport)}
+                onClose={handleExportClose}
+            >
+                <MenuItem onClick={() => handleExportWithFormat('csv')}>CSV</MenuItem>
+                <MenuItem onClick={() => handleExportWithFormat('excel')}>Excel</MenuItem>
+                <MenuItem onClick={() => handleExportWithFormat('json')}>JSON</MenuItem>
+            </Menu>
 
             {/* --- Modal de Compartir Lista (Componente Secundario) --- */}
             {listToShare && (

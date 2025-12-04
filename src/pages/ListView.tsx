@@ -203,8 +203,6 @@ const ListView: React.FC = () => {
                 Descripción: item.description,
                 Importancia: priorities.find(p => p.id === item.importance)?.name || 'N/A',
                 Coste: item.estimated_cost,
-                Estado: item.is_adjudicated ? 'Adjudicado' : 'Disponible',
-                AdjudicadoPor: item.adjudicated_by || '',
                 URLs: item.urls?.map(u => u.url).join(', ') || '',
             }));
 
@@ -266,8 +264,6 @@ const ListView: React.FC = () => {
             Descripción: item.description,
             Importancia: priorities.find(p => p.id === item.importance)?.name || 'N/A',
             Coste: item.estimated_cost,
-            Estado: item.is_adjudicated ? 'Adjudicado' : 'Disponible',
-            AdjudicadoPor: item.adjudicated_by || '',
             URLs: item.urls?.map(u => u.url).join(', ') || '',
         }));
 
