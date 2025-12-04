@@ -27,8 +27,17 @@ import {
     Tooltip,
     Tabs,
     Tab,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
 } from '@mui/material';
-import { FaPlus, FaList, FaShareSquare, FaTh, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaList, FaShareSquare, FaTh, FaEdit, FaTrash, FaDownload, FaEnvelope } from 'react-icons/fa';
+import * as XLSX from 'xlsx';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api';
 import type { List } from '../types'; // Importamos la interfaz List
@@ -63,6 +72,14 @@ const Dashboard: React.FC = () => {
     const [listToShare, setListToShare] = useState<List | null>(null);
     const [activeTab, setActiveTab] = useState(0);
     const [sharedLists, setSharedLists] = useState<List[]>([]);
+
+    // Export state
+    const [exportingListId, setExportingListId] = useState<string | null>(null);
+    const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+    const [recipientEmail, setRecipientEmail] = useState('');
+    const [exportFormat, setExportFormat] = useState<'json' | 'csv' | 'excel'>('excel');
+    const [isSendingEmail, setIsSendingEmail] = useState(false);
+    const [listToExport, setListToExport] = useState<List | null>(null);
 
     // URL de la API del backend (a través del proxy de Vite)
     // const BACKEND_API_URL = '';
@@ -154,6 +171,146 @@ const Dashboard: React.FC = () => {
         }
     };
 
+    // Export handlers
+    const handleExportList = async (list: List, format: 'json' | 'csv' | 'excel') => {
+        setExportingListId(list.id);
+        try {
+            // Fetch items for this list
+            const { data: itemsData, error } = await api.items.list(list.id);
+            if (error) throw new Error(error);
+            
+            const items = itemsData || [];
+            const priorities = [
+                { id: 3, name: 'Importante' },
+                { id: 2, name: 'Normal' },
+                { id: 1, name: 'Opcional' },
+            ];
+
+            const exportData = items.map((item: any) => ({
+                Nombre: item.name,
+                Descripción: item.description,
+                Importancia: priorities.find(p => p.id === item.importance)?.name || 'N/A',
+                Coste: item.estimated_cost,
+                Estado: item.is_adjudicated ? 'Adjudicado' : 'Disponible',
+                AdjudicadoPor: item.adjudicated_by || '',
+                URLs: item.urls?.map((u: any) => u.url).join(', ') || '',
+            }));
+
+            const fileName = `${list.name.replace(/\s+/g, '_')}_export`;
+
+            if (format === 'json') {
+                const jsonString = `data:text/json;chatset=utf-8,${encodeURIComponent(
+                    JSON.stringify(items, null, 2)
+                )}`;
+                const link = document.createElement('a');
+                link.href = jsonString;
+                link.download = `${fileName}.json`;
+                link.click();
+            } else if (format === 'csv') {
+                const worksheet = XLSX.utils.json_to_sheet(exportData);
+                const csvOutput = XLSX.utils.sheet_to_csv(worksheet);
+                const blob = new Blob([csvOutput], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `${fileName}.csv`;
+                link.click();
+            } else if (format === 'excel') {
+                const worksheet = XLSX.utils.json_to_sheet(exportData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Items");
+                XLSX.writeFile(workbook, `${fileName}.xlsx`);
+            }
+            toast.success('Lista exportada correctamente');
+        } catch (error: any) {
+            toast.error(error.message || 'Error al exportar la lista');
+        } finally {
+            setExportingListId(null);
+        }
+    };
+
+    const handleOpenEmailDialog = (list: List) => {
+        setListToExport(list);
+        setEmailDialogOpen(true);
+    };
+
+    const handleSendEmail = async () => {
+        if (!recipientEmail || !listToExport) {
+            toast.error('Por favor, introduce un email.');
+            return;
+        }
+        setIsSendingEmail(true);
+
+        try {
+            // Fetch items for this list
+            const { data: itemsData, error } = await api.items.list(listToExport.id);
+            if (error) throw new Error(error);
+            
+            const items = itemsData || [];
+            const priorities = [
+                { id: 3, name: 'Importante' },
+                { id: 2, name: 'Normal' },
+                { id: 1, name: 'Opcional' },
+            ];
+
+            const exportData = items.map((item: any) => ({
+                Nombre: item.name,
+                Descripción: item.description,
+                Importancia: priorities.find(p => p.id === item.importance)?.name || 'N/A',
+                Coste: item.estimated_cost,
+                Estado: item.is_adjudicated ? 'Adjudicado' : 'Disponible',
+                AdjudicadoPor: item.adjudicated_by || '',
+                URLs: item.urls?.map((u: any) => u.url).join(', ') || '',
+            }));
+
+            const fileName = `${listToExport.name.replace(/\s+/g, '_')}_export`;
+            let content = '';
+            let fileExtension = '';
+
+            if (exportFormat === 'json') {
+                content = btoa(unescape(encodeURIComponent(JSON.stringify(items, null, 2))));
+                fileExtension = 'json';
+            } else if (exportFormat === 'csv') {
+                const worksheet = XLSX.utils.json_to_sheet(exportData);
+                const csvOutput = XLSX.utils.sheet_to_csv(worksheet);
+                content = btoa(unescape(encodeURIComponent(csvOutput)));
+                fileExtension = 'csv';
+            } else if (exportFormat === 'excel') {
+                const worksheet = XLSX.utils.json_to_sheet(exportData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Items");
+                const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+                let binary = '';
+                const bytes = new Uint8Array(excelBuffer);
+                const len = bytes.byteLength;
+                for (let i = 0; i < len; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                }
+                content = btoa(binary);
+                fileExtension = 'xlsx';
+            }
+
+            const result = await api.lists.sendListFile({
+                recipientEmail,
+                subject: `Archivo de lista: ${listToExport.name}`,
+                htmlContent: `<p>Adjunto encontrarás la lista <strong>${listToExport.name}</strong> en formato ${exportFormat.toUpperCase()}.</p>`,
+                attachment: {
+                    name: `${fileName}.${fileExtension}`,
+                    content: content,
+                },
+            });
+
+            if (result.error) throw new Error(result.error);
+            toast.success('Email enviado correctamente.');
+            setEmailDialogOpen(false);
+            setRecipientEmail('');
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || 'Error al enviar el email.');
+        } finally {
+            setIsSendingEmail(false);
+        }
+    };
+
     // --- JSX de Componentes ---
 
     const ListCard: React.FC<{ list: List; isShared?: boolean }> = ({ list, isShared }) => (
@@ -230,6 +387,28 @@ const Dashboard: React.FC = () => {
                         >
                             Compartir {list.list_shares?.[0]?.count ? `(${list.list_shares[0].count})` : ''}
                         </Button>
+                        <Tooltip title="Exportar">
+                            <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleExportList(list, 'excel');
+                                }}
+                            >
+                                <FaDownload size={12} />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Enviar por Email">
+                            <IconButton
+                                size="small"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleOpenEmailDialog(list);
+                                }}
+                            >
+                                <FaEnvelope size={12} />
+                            </IconButton>
+                        </Tooltip>
                     </>
                 ) : (
                     <Button
@@ -382,6 +561,16 @@ const Dashboard: React.FC = () => {
                                                             <FaShareSquare />
                                                         </IconButton>
                                                     </Tooltip>
+                                                    <Tooltip title="Exportar">
+                                                        <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleExportList(list, 'excel'); }}>
+                                                            <FaDownload />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title="Enviar por Email">
+                                                        <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleOpenEmailDialog(list); }}>
+                                                            <FaEnvelope />
+                                                        </IconButton>
+                                                    </Tooltip>
                                                 </>
                                             ) : (
                                                 <Tooltip title="Ver Lista">
@@ -433,6 +622,41 @@ const Dashboard: React.FC = () => {
                     </Stack>
                 </Box>
             </Modal>
+
+            {/* Email Dialog */}
+            <Dialog open={emailDialogOpen} onClose={() => setEmailDialogOpen(false)}>
+                <DialogTitle>Enviar Lista por Email</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2} sx={{ mt: 1, minWidth: 300 }}>
+                        <TextField
+                            autoFocus
+                            label="Email del Destinatario"
+                            type="email"
+                            fullWidth
+                            value={recipientEmail}
+                            onChange={(e) => setRecipientEmail(e.target.value)}
+                        />
+                        <FormControl fullWidth>
+                            <InputLabel>Formato</InputLabel>
+                            <Select
+                                value={exportFormat}
+                                label="Formato"
+                                onChange={(e) => setExportFormat(e.target.value as any)}
+                            >
+                                <MenuItem value="excel">Excel (.xlsx)</MenuItem>
+                                <MenuItem value="csv">CSV (.csv)</MenuItem>
+                                <MenuItem value="json">JSON (.json)</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setEmailDialogOpen(false)}>Cancelar</Button>
+                    <Button onClick={handleSendEmail} variant="contained" disabled={isSendingEmail}>
+                        {isSendingEmail ? <CircularProgress size={24} /> : 'Enviar'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             {/* --- Modal de Compartir Lista (Componente Secundario) --- */}
             {listToShare && (
