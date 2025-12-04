@@ -31,8 +31,9 @@ const Feature: React.FC<FeatureProps> = ({ icon: Icon, title, text }) => (
             justifyContent: 'flex-start', // Dejar el espacio libre en la parte inferior
             height: '100%', // Crucial para que el Grid stretch funcione
             border: '1px solid',
-            borderColor: 'grey.200',
-            borderRadius: 2
+            borderColor: 'divider',
+            borderRadius: 2,
+            bgcolor: 'background.paper'
         }}
     >
         <Box sx={{ color: 'primary.main', mb: 2 }}>
@@ -52,6 +53,7 @@ const UseCase: React.FC<UseCaseProps> = ({ emoji, title, situation, solution }) 
             display: 'flex',
             flexDirection: 'column',
             borderRadius: 2,
+            bgcolor: 'background.paper',
             transition: 'transform 0.2s, box-shadow 0.2s',
             '&:hover': {
                 transform: 'translateY(-4px)',
@@ -190,7 +192,10 @@ const Home: React.FC = () => {
             </Container>
 
             {/* --- Sección de Casos de Uso --- */}
-            <Box sx={{ bgcolor: 'grey.50', py: 8 }}>
+            <Box sx={(theme) => ({ 
+                bgcolor: theme.palette.mode === 'dark' ? 'background.paper' : 'grey.50', 
+                py: 8 
+            })}>
                 <Container maxWidth="lg">
                     <Typography
                         variant="h4"
