@@ -779,6 +779,14 @@ const ListView: React.FC = () => {
                         anchorEl={anchorElExport}
                         open={openExport}
                         onClose={handleExportClose}
+                        anchorOrigin={{
+                            vertical: 'bottom',
+                            horizontal: 'left',
+                        }}
+                        transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'left',
+                        }}
                     >
                         <MenuItem onClick={() => handleExport('csv')}>CSV</MenuItem>
                         <MenuItem onClick={() => handleExport('excel')}>Excel</MenuItem>
