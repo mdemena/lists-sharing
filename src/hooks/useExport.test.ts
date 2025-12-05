@@ -18,17 +18,25 @@ vi.mock("react-hot-toast", () => ({
     },
 }));
 
-// Mock XLSX
-vi.mock("xlsx", () => ({
-    utils: {
-        json_to_sheet: vi.fn(),
-        sheet_to_csv: vi.fn(),
-        book_new: vi.fn(),
-        book_append_sheet: vi.fn(),
-    },
-    writeFile: vi.fn(),
-    write: vi.fn().mockReturnValue(new ArrayBuffer(8)),
-}));
+// Mock ExcelJS
+const mockWriteBuffer = vi.fn().mockResolvedValue(new ArrayBuffer(8));
+const mockAddWorksheet = vi.fn().mockReturnValue({
+    columns: [],
+    addRows: vi.fn(),
+});
+
+vi.mock("exceljs", () => {
+    return {
+        default: {
+            Workbook: vi.fn().mockImplementation(() => ({
+                addWorksheet: mockAddWorksheet,
+                xlsx: {
+                    writeBuffer: mockWriteBuffer,
+                },
+            })),
+        },
+    };
+});
 
 describe("useExport", () => {
     it("generates correct export data", () => {

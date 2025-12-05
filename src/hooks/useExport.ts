@@ -1,6 +1,6 @@
 // src/hooks/useExport.ts
 
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { api } from "../api";
 import toast from "react-hot-toast";
 import type { ListItem } from "../types";
@@ -51,6 +51,35 @@ export function useExport(options: UseExportOptions = {}) {
         });
     };
 
+    const generateCSV = (data: ExportData[]): string => {
+        if (data.length === 0) return "";
+        const headers = Object.keys(data[0]).join(",");
+        const rows = data.map(row =>
+            Object.values(row).map(value => {
+                const stringValue = String(value);
+                // Escape quotes and wrap in quotes if contains comma or quotes
+                if (stringValue.includes(",") || stringValue.includes('"')) {
+                    return `"${stringValue.replace(/"/g, '""')}"`;
+                }
+                return stringValue;
+            }).join(",")
+        );
+        return [headers, ...rows].join("\n");
+    };
+
+    const generateExcelBuffer = async (data: ExportData[]): Promise<ArrayBuffer> => {
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("Items");
+
+        if (data.length > 0) {
+            const columns = Object.keys(data[0]).map(key => ({ header: key, key, width: 20 }));
+            worksheet.columns = columns;
+            worksheet.addRows(data);
+        }
+
+        return await workbook.xlsx.writeBuffer();
+    };
+
     const exportToFile = async (
         items: ListItem[],
         format: ExportFormat,
@@ -61,18 +90,16 @@ export function useExport(options: UseExportOptions = {}) {
             const sanitizedFileName = fileName.replace(/\s+/g, "_");
 
             if (format === "json") {
-                const jsonString = `data:text/json;charset=utf-8,${
-                    encodeURIComponent(
-                        JSON.stringify(items, null, 2),
-                    )
-                }`;
+                const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
+                    JSON.stringify(items, null, 2),
+                )
+                    }`;
                 const link = document.createElement("a");
                 link.href = jsonString;
                 link.download = `${sanitizedFileName}.json`;
                 link.click();
             } else if (format === "csv") {
-                const worksheet = XLSX.utils.json_to_sheet(exportData);
-                const csvOutput = XLSX.utils.sheet_to_csv(worksheet);
+                const csvOutput = generateCSV(exportData);
                 const blob = new Blob([csvOutput], {
                     type: "text/csv;charset=utf-8;",
                 });
@@ -81,14 +108,19 @@ export function useExport(options: UseExportOptions = {}) {
                 link.download = `${sanitizedFileName}.csv`;
                 link.click();
             } else if (format === "excel") {
-                const worksheet = XLSX.utils.json_to_sheet(exportData);
-                const workbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(workbook, worksheet, "Items");
-                XLSX.writeFile(workbook, `${sanitizedFileName}.xlsx`);
+                const buffer = await generateExcelBuffer(exportData);
+                const blob = new Blob([buffer], {
+                    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = `${sanitizedFileName}.xlsx`;
+                link.click();
             }
 
             toast.success("Lista exportada correctamente");
         } catch (error: any) {
+            console.error(error);
             toast.error(error.message || "Error al exportar la lista");
             throw error;
         }
@@ -114,20 +146,14 @@ export function useExport(options: UseExportOptions = {}) {
                 );
                 fileExtension = "json";
             } else if (format === "csv") {
-                const worksheet = XLSX.utils.json_to_sheet(exportData);
-                const csvOutput = XLSX.utils.sheet_to_csv(worksheet);
+                const csvOutput = generateCSV(exportData);
                 content = btoa(unescape(encodeURIComponent(csvOutput)));
                 fileExtension = "csv";
             } else if (format === "excel") {
-                const worksheet = XLSX.utils.json_to_sheet(exportData);
-                const workbook = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(workbook, worksheet, "Items");
-                const excelBuffer = XLSX.write(workbook, {
-                    bookType: "xlsx",
-                    type: "array",
-                });
+                const buffer = await generateExcelBuffer(exportData);
+                // Convert ArrayBuffer to Base64
                 let binary = "";
-                const bytes = new Uint8Array(excelBuffer);
+                const bytes = new Uint8Array(buffer);
                 const len = bytes.byteLength;
                 for (let i = 0; i < len; i++) {
                     binary += String.fromCharCode(bytes[i]);
@@ -150,6 +176,7 @@ export function useExport(options: UseExportOptions = {}) {
             if (result.error) throw new Error(result.error);
             toast.success("Email enviado correctamente.");
         } catch (error: any) {
+            console.error(error);
             toast.error(error.message || "Error al enviar el email.");
             throw error;
         }
