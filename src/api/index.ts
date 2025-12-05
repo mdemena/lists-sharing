@@ -231,6 +231,23 @@ export const api = {
             await client.delete(`/items?itemId=${itemId}`);
             return { error: null };
         },
+        adjudicate: async (itemId: string, adjudicate: boolean) => {
+            try {
+                const response = await client.put(`/items?itemId=${itemId}`, {
+                    is_adjudicated: adjudicate,
+                    adjudicated_by: adjudicate ? "current_user" : null, // Backend will use actual user
+                    adjudicated_at: adjudicate
+                        ? new Date().toISOString()
+                        : null,
+                });
+                return { data: response.data, error: null };
+            } catch (error: any) {
+                return {
+                    data: null,
+                    error: error.response?.data?.error || error.message,
+                };
+            }
+        },
     },
     profiles: {
         get: async (id: string) => {
