@@ -1,0 +1,68 @@
+{
+    "common": {
+        "loading": "Kargatzen...",
+        "actions": "Ekintzak",
+        "save": "Gorde",
+        "cancel": "Utzi",
+        "delete": "Ezabatu",
+        "edit": "Editatu",
+        "yes": "Bai",
+        "no": "Ez",
+        "error": "Errorea",
+        "success": "Arrakasta"
+    },
+    "nav": {
+        "dashboard": "Zerrendak",
+        "profile": "Profila",
+        "logout": "Saioa itxi",
+        "login": "Saioa hasi"
+    },
+    "listView": {
+        "title": "Zerrenda",
+        "export": "Esportatu",
+        "email": "Postaz bidali",
+        "addItem": "Gehitu elementua",
+        "emptyOwner": "Zerrenda hau hutsik dago",
+        "emptyVisitor": "Ez dago elementurik zerrenda honetan",
+        "columns": {
+            "image": "Irudia",
+            "name": "Izena",
+            "description": "Deskribapena",
+            "importance": "Garrantzia",
+            "cost": "Kostua",
+            "status": "Egoera",
+            "links": "Estekak",
+            "actions": "Ekintzak"
+        },
+        "status": {
+            "adjudicated": "HARTUTA",
+            "available": "ESKURAGARRI",
+            "reserved": "Erreserbatuta"
+        },
+        "actions": {
+            "release": "Askatu",
+            "take": "Nik hartzen dut",
+            "viewLinks": "Ikusi ({{count}})"
+        }
+    },
+    "dashboard": {
+        "myLists": "Nire Zerrendak",
+        "sharedWithMe": "Nirekin Partekatuak",
+        "newList": "Zerrenda Berria",
+        "emptyMyLists": "Ez duzu zerrendarik oraindik",
+        "emptySharedLists": "Ez dago zurekin partekatutako zerrendarik",
+        "createFirstList": "Sortu zure lehen zerrenda",
+        "columns": {
+            "name": "Izena",
+            "description": "Deskribapena",
+            "sharedBy": "Nork partekatua"
+        },
+        "tooltips": {
+            "export": "Esportatu",
+            "email": "Postaz bidali",
+            "edit": "Editatu",
+            "share": "Partekatu",
+            "delete": "Ezabatu"
+        }
+    }
+}

@@ -1,0 +1,68 @@
+{
+    "common": {
+        "loading": "Cargando...",
+        "actions": "Accións",
+        "save": "Gardar",
+        "cancel": "Cancelar",
+        "delete": "Eliminar",
+        "edit": "Editar",
+        "yes": "Si",
+        "no": "Non",
+        "error": "Erro",
+        "success": "Éxito"
+    },
+    "nav": {
+        "dashboard": "Listas",
+        "profile": "Perfil",
+        "logout": "Pechar Sesión",
+        "login": "Iniciar Sesión"
+    },
+    "listView": {
+        "title": "Lista",
+        "export": "Exportar",
+        "email": "Enviar por Email",
+        "addItem": "Engadir Ítem",
+        "emptyOwner": "Esta lista está baleira",
+        "emptyVisitor": "Non hai ítems nesta lista",
+        "columns": {
+            "image": "Imaxe",
+            "name": "Nome",
+            "description": "Descrición",
+            "importance": "Importancia",
+            "cost": "Custo Est.",
+            "status": "Estado",
+            "links": "Ligazóns",
+            "actions": "Accións"
+        },
+        "status": {
+            "adjudicated": "ADXUDICADO",
+            "available": "DISPOÑIBLE",
+            "reserved": "Reservado"
+        },
+        "actions": {
+            "release": "Soltar",
+            "take": "Eu cólloor",
+            "viewLinks": "Ver ({{count}})"
+        }
+    },
+    "dashboard": {
+        "myLists": "As Miñas Listas",
+        "sharedWithMe": "Compartidas Comigo",
+        "newList": "Nova Lista",
+        "emptyMyLists": "Aínda non tes listas",
+        "emptySharedLists": "Non tes listas compartidas contigo",
+        "createFirstList": "Crea a túa primeira lista",
+        "columns": {
+            "name": "Nome",
+            "description": "Descrición",
+            "sharedBy": "Compartida por"
+        },
+        "tooltips": {
+            "export": "Exportar",
+            "email": "Enviar por Email",
+            "edit": "Editar",
+            "share": "Compartir",
+            "delete": "Eliminar"
+        }
+    }
+}

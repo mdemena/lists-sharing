@@ -1,0 +1,68 @@
+{
+    "common": {
+        "loading": "Loading...",
+        "actions": "Actions",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete",
+        "edit": "Edit",
+        "yes": "Yes",
+        "no": "No",
+        "error": "Error",
+        "success": "Success"
+    },
+    "nav": {
+        "dashboard": "Lists",
+        "profile": "Profile",
+        "logout": "Logout",
+        "login": "Login"
+    },
+    "listView": {
+        "title": "List",
+        "export": "Export",
+        "email": "Email",
+        "addItem": "Add Item",
+        "emptyOwner": "This list is empty",
+        "emptyVisitor": "There are no items in this list",
+        "columns": {
+            "image": "Image",
+            "name": "Name",
+            "description": "Description",
+            "importance": "Importance",
+            "cost": "Est. Cost",
+            "status": "Status",
+            "links": "Links",
+            "actions": "Actions"
+        },
+        "status": {
+            "adjudicated": "TAKEN",
+            "available": "AVAILABLE",
+            "reserved": "Reserved"
+        },
+        "actions": {
+            "release": "Release",
+            "take": "I'll take it",
+            "viewLinks": "View ({{count}})"
+        }
+    },
+    "dashboard": {
+        "myLists": "My Lists",
+        "sharedWithMe": "Shared With Me",
+        "newList": "New List",
+        "emptyMyLists": "You don't have any lists yet",
+        "emptySharedLists": "No lists shared with you",
+        "createFirstList": "Create your first list",
+        "columns": {
+            "name": "Name",
+            "description": "Description",
+            "sharedBy": "Shared by"
+        },
+        "tooltips": {
+            "export": "Export",
+            "email": "Email",
+            "edit": "Edit",
+            "share": "Share",
+            "delete": "Delete"
+        }
+    }
+}

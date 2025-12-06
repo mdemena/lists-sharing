@@ -32,6 +32,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api';
 import type { List, ListItem, ExternalUrl } from '../types';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import AuthRequiredDialog from '../components/AuthRequiredDialog';
 import { ItemCard } from '../components/cards';
 import { ConfirmDeleteDialog, ItemFormModal, EmailExportDialog, type ItemFormData, type ExportFormat } from '../components/dialogs';
@@ -52,6 +53,7 @@ const ListView: React.FC = () => {
     const isOwnerMode = location.pathname.includes('/edit');
     const { user } = useAuth();
     const { exportToFile, sendViaEmail } = useExport({ includeStatus: !isOwnerMode });
+    const { t } = useTranslation();
 
     // State
     const [list, setList] = useState<List | null>(null);
@@ -281,14 +283,14 @@ const ListView: React.FC = () => {
             <Table>
                 <TableHead>
                     <TableRow>
-                        <TableCell>Imagen</TableCell>
-                        <TableCell>Nombre</TableCell>
-                        <TableCell>Descripción</TableCell>
-                        <TableCell>Importancia</TableCell>
-                        <TableCell>Coste Est.</TableCell>
-                        {!isOwnerMode && <TableCell>Estado</TableCell>}
-                        <TableCell align="center">Enlaces</TableCell>
-                        <TableCell align="right">Acciones</TableCell>
+                        <TableCell>{t('listView.columns.image')}</TableCell>
+                        <TableCell>{t('listView.columns.name')}</TableCell>
+                        <TableCell>{t('listView.columns.description')}</TableCell>
+                        <TableCell>{t('listView.columns.importance')}</TableCell>
+                        <TableCell>{t('listView.columns.cost')}</TableCell>
+                        {!isOwnerMode && <TableCell>{t('listView.columns.status')}</TableCell>}
+                        <TableCell align="center">{t('listView.columns.links')}</TableCell>
+                        <TableCell align="right">{t('listView.columns.actions')}</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -335,7 +337,7 @@ const ListView: React.FC = () => {
                                             px: 1, py: 0.5, borderRadius: 1, display: 'inline-block',
                                             fontWeight: 'bold', fontSize: '0.75rem'
                                         }}>
-                                            {item.is_adjudicated ? 'ADJUDICADO' : 'DISPONIBLE'}
+                                            {item.is_adjudicated ? t('listView.status.adjudicated') : t('listView.status.available')}
                                         </Box>
                                     </TableCell>
                                 )}
@@ -351,7 +353,7 @@ const ListView: React.FC = () => {
                                                 setLinksMenuAnchor(e.currentTarget);
                                             }}
                                         >
-                                            Ver ({item.urls.length})
+                                            {t('listView.actions.viewLinks', { count: item.urls.length })}
                                         </Button>
                                     ) : (
                                         <Typography variant="caption" color="text.secondary">-</Typography>
@@ -362,22 +364,22 @@ const ListView: React.FC = () => {
                                         {isOwnerMode ? (
                                             <>
                                                 <Button size="small" variant="outlined" onClick={(e) => { e.stopPropagation(); handleOpenItemModal(item); }}>
-                                                    Editar
+                                                    {t('common.edit')}
                                                 </Button>
                                                 <Button size="small" color="error" onClick={(e) => { e.stopPropagation(); handleDeleteItem(item); }}>
-                                                    Eliminar
+                                                    {t('common.delete')}
                                                 </Button>
                                             </>
                                         ) : user && (
                                             isAdjudicatedByCurrentUser ? (
                                                 <Button size="small" variant="contained" color="warning" onClick={(e) => { e.stopPropagation(); handleAdjudicate(item, false); }}>
-                                                    Soltar
+                                                    {t('listView.actions.release')}
                                                 </Button>
                                             ) : item.is_adjudicated ? (
-                                                <Button size="small" variant="contained" color="error" disabled>Reservado</Button>
+                                                <Button size="small" variant="contained" color="error" disabled>{t('listView.status.reserved')}</Button>
                                             ) : (
                                                 <Button size="small" variant="contained" color="success" onClick={(e) => { e.stopPropagation(); handleAdjudicate(item, true); }}>
-                                                    Yo lo tomo
+                                                    {t('listView.actions.take')}
                                                 </Button>
                                             )
                                         )}
@@ -465,14 +467,14 @@ const ListView: React.FC = () => {
                         startIcon={<FaDownload />}
                         onClick={handleExportClick}
                     >
-                        Exportar
+                        {t('listView.export')}
                     </Button>
                     <Button
                         variant="outlined"
                         startIcon={<FaEnvelope />}
                         onClick={() => setEmailDialogOpen(true)}
                     >
-                        Email
+                        {t('listView.email')}
                     </Button>
                     {isOwnerMode && (
                         <Button
@@ -480,7 +482,7 @@ const ListView: React.FC = () => {
                             startIcon={<FaPlus />}
                             onClick={() => handleOpenItemModal()}
                         >
-                            Añadir Ítem
+                            {t('listView.addItem')}
                         </Button>
                     )}
                 </Stack>
@@ -490,7 +492,7 @@ const ListView: React.FC = () => {
             {items.length === 0 ? (
                 <Box textAlign="center" py={8}>
                     <Typography variant="h6" color="text.secondary" mb={2}>
-                        {isOwnerMode ? 'Esta lista está vacía' : 'No hay ítems en esta lista'}
+                        {isOwnerMode ? t('listView.emptyOwner') : t('listView.emptyVisitor')}
                     </Typography>
                     {isOwnerMode && (
                         <Button

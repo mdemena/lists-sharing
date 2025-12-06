@@ -7,6 +7,8 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider, createTheme, CssBaseline, type PaletteMode } from '@mui/material';
 import { Toaster } from 'react-hot-toast';
 import App from './App.tsx';
+import './i18n/config';
+import 'flag-icons/css/flag-icons.min.css';
 
 // --- Context para el modo de tema ---
 interface ThemeModeContextType {

@@ -29,6 +29,7 @@ import type { List, ListItem } from '../types';
 import { useNavigate } from 'react-router-dom';
 import ShareListModal from '../components/ShareListModal';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { ListCard } from '../components/cards';
 import { ConfirmDeleteDialog, CreateListModal, EmailExportDialog, type ExportFormat } from '../components/dialogs';
 import { ExportMenu } from '../components/export';
@@ -38,7 +39,8 @@ const Dashboard: React.FC = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const { exportToFile, sendViaEmail } = useExport();
-    
+    const { t } = useTranslation();
+
     // State
     const [lists, setLists] = useState<List[]>([]);
     const [sharedLists, setSharedLists] = useState<List[]>([]);
@@ -175,7 +177,7 @@ const Dashboard: React.FC = () => {
         try {
             const { data: itemsData, error } = await api.items.list(listToExportFormat.id);
             if (error) throw new Error(error);
-            
+
             await exportToFile(itemsData as ListItem[] || [], format, listToExportFormat.name);
         } catch (error: any) {
             toast.error(error.message || 'Error al exportar');
@@ -193,7 +195,7 @@ const Dashboard: React.FC = () => {
         try {
             const { data: itemsData, error } = await api.items.list(listToExport.id);
             if (error) throw new Error(error);
-            
+
             await sendViaEmail(itemsData as ListItem[] || [], format, listToExport.name, email);
         } catch (error: any) {
             toast.error(error.message || 'Error al enviar email');
@@ -230,17 +232,18 @@ const Dashboard: React.FC = () => {
             <Table>
                 <TableHead>
                     <TableRow>
-                        <TableCell>Nombre</TableCell>
-                        <TableCell>Descripción</TableCell>
-                        {isSharedTab && <TableCell>Compartida por</TableCell>}
-                        <TableCell align="right">Acciones</TableCell>
+
+                        <TableCell>{t('dashboard.columns.name')}</TableCell>
+                        <TableCell>{t('dashboard.columns.description')}</TableCell>
+                        {isSharedTab && <TableCell>{t('dashboard.columns.sharedBy')}</TableCell>}
+                        <TableCell align="right">{t('common.actions')}</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {currentLists.map((list) => (
-                        <TableRow 
-                            key={list.id} 
-                            hover 
+                        <TableRow
+                            key={list.id}
+                            hover
                             sx={{ cursor: 'pointer' }}
                             onClick={() => navigate(isSharedTab ? `/share/${list.id}` : `/list/${list.id}/edit`)}
                         >
@@ -249,29 +252,29 @@ const Dashboard: React.FC = () => {
                             {isSharedTab && <TableCell>{list.shared_by_name || '-'}</TableCell>}
                             <TableCell align="right">
                                 <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                                    <Tooltip title="Exportar">
+                                    <Tooltip title={t('dashboard.tooltips.export')}>
                                         <IconButton size="small" onClick={(e) => handleExportClick(e, list)}>
                                             <FaDownload size={14} />
                                         </IconButton>
                                     </Tooltip>
-                                    <Tooltip title="Enviar por Email">
+                                    <Tooltip title={t('dashboard.tooltips.email')}>
                                         <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleOpenEmailDialog(list); }}>
                                             <FaEnvelope size={14} />
                                         </IconButton>
                                     </Tooltip>
                                     {!isSharedTab && (
                                         <>
-                                            <Tooltip title="Editar">
+                                            <Tooltip title={t('dashboard.tooltips.edit')}>
                                                 <IconButton size="small" onClick={(e) => { e.stopPropagation(); navigate(`/list/${list.id}/edit`); }}>
                                                     <FaEdit size={14} />
                                                 </IconButton>
                                             </Tooltip>
-                                            <Tooltip title="Compartir">
+                                            <Tooltip title={t('dashboard.tooltips.share')}>
                                                 <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); handleShareClick(list); }}>
                                                     <FaShareSquare size={14} />
                                                 </IconButton>
                                             </Tooltip>
-                                            <Tooltip title="Eliminar">
+                                            <Tooltip title={t('dashboard.tooltips.delete')}>
                                                 <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); handleDeleteList(list); }}>
                                                     <FaTrash size={14} />
                                                 </IconButton>
@@ -305,7 +308,7 @@ const Dashboard: React.FC = () => {
                 spacing={2}
             >
                 <Typography variant="h4" component="h1" fontWeight="bold">
-                    {activeTab === 0 ? 'Mis Listas' : 'Compartidas Conmigo'}
+                    {activeTab === 0 ? t('dashboard.myLists') : t('dashboard.sharedWithMe')}
                 </Typography>
                 <Stack direction="row" spacing={2} alignItems="center">
                     <ToggleButtonGroup
@@ -323,7 +326,7 @@ const Dashboard: React.FC = () => {
                             startIcon={<FaPlus />}
                             onClick={() => setIsCreationModalOpen(true)}
                         >
-                            Nueva Lista
+                            {t('dashboard.newList')}
                         </Button>
                     )}
                 </Stack>
@@ -331,17 +334,18 @@ const Dashboard: React.FC = () => {
 
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
                 <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
-                    <Tab label={`Mis Listas (${lists.length})`} />
-                    <Tab label={`Compartidas Conmigo (${sharedLists.length})`} />
+                    <Tab label={`${t('dashboard.myLists')} (${lists.length})`} />
+                    <Tab label={`${t('dashboard.sharedWithMe')} (${sharedLists.length})`} />
                 </Tabs>
             </Box>
 
             {currentLists.length === 0 ? (
                 <Box textAlign="center" py={8}>
+
                     <Typography variant="h6" color="text.secondary" mb={2}>
                         {activeTab === 0
-                            ? 'No tienes listas todavía'
-                            : 'No tienes listas compartidas contigo'
+                            ? t('dashboard.emptyMyLists')
+                            : t('dashboard.emptySharedLists')
                         }
                     </Typography>
                     {activeTab === 0 && (
@@ -350,7 +354,7 @@ const Dashboard: React.FC = () => {
                             startIcon={<FaPlus />}
                             onClick={() => setIsCreationModalOpen(true)}
                         >
-                            Crear tu primera lista
+                            {t('dashboard.createFirstList')}
                         </Button>
                     )}
                 </Box>

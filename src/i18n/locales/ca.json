@@ -1,0 +1,68 @@
+{
+    "common": {
+        "loading": "Carregant...",
+        "actions": "Accions",
+        "save": "Desa",
+        "cancel": "Cancel·la",
+        "delete": "Esborra",
+        "edit": "Edita",
+        "yes": "Sí",
+        "no": "No",
+        "error": "Error",
+        "success": "Èxit"
+    },
+    "nav": {
+        "dashboard": "Llistes",
+        "profile": "Perfil",
+        "logout": "Tancar Sessió",
+        "login": "Iniciar Sessió"
+    },
+    "listView": {
+        "title": "Llista",
+        "export": "Exportar",
+        "email": "Enviar per Email",
+        "addItem": "Afegir Ítem",
+        "emptyOwner": "Aquesta llista és buida",
+        "emptyVisitor": "No hi ha ítems en aquesta llista",
+        "columns": {
+            "image": "Imatge",
+            "name": "Nom",
+            "description": "Descripció",
+            "importance": "Importància",
+            "cost": "Cost Est.",
+            "status": "Estat",
+            "links": "Enllaços",
+            "actions": "Accions"
+        },
+        "status": {
+            "adjudicated": "ADJUDICAT",
+            "available": "DISPONIBLE",
+            "reserved": "Reservat"
+        },
+        "actions": {
+            "release": "Alliberar",
+            "take": "M'ho quedo",
+            "viewLinks": "Veure ({{count}})"
+        }
+    },
+    "dashboard": {
+        "myLists": "Les Meves Llistes",
+        "sharedWithMe": "Compartides Amb Mi",
+        "newList": "Nova Llista",
+        "emptyMyLists": "Encara no tens llistes",
+        "emptySharedLists": "No tens llistes compartides amb tu",
+        "createFirstList": "Crea la teva primera llista",
+        "columns": {
+            "name": "Nom",
+            "description": "Descripció",
+            "sharedBy": "Compartida per"
+        },
+        "tooltips": {
+            "export": "Exportar",
+            "email": "Enviar per Email",
+            "edit": "Edita",
+            "share": "Compartir",
+            "delete": "Esborra"
+        }
+    }
+}
