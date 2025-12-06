@@ -115,6 +115,19 @@ export const api = {
                 };
             }
         },
+        updateUser: async (updates: any) => {
+            try {
+                const response = await client.post("/auth?action=update-user", {
+                    data: updates
+                });
+                return { data: { user: response.data }, error: null };
+            } catch (error: any) {
+                return {
+                    data: null,
+                    error: error.response?.data?.error || error.message,
+                };
+            }
+        },
         signInWithOAuth: async (
             provider: "google" | "github",
             options?: any,

@@ -64,5 +64,16 @@
             "share": "Partekatu",
             "delete": "Ezabatu"
         }
+    },
+    "profile": {
+        "title": "Nire Profila",
+        "email": "Posta Elektronikoa",
+        "displayName": "Bistaratzeko Izena",
+        "displayNameHelper": "Izen hau beste erabiltzaileentzat ikusgai egongo da",
+        "preferredLanguage": "Hizkuntza Hobetsia",
+        "preferredLanguageHelper": "Aukeratu aplikazioaren hizkuntza lehenetsia",
+        "dateOfBirth": "Jaiotze data",
+        "save": "Gorde Aldaketak",
+        "saving": "Gordetzen..."
     }
 }

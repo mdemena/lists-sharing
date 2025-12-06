@@ -1,16 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, TextField, Button, Paper, Container } from '@mui/material';
+import { Box, Typography, TextField, Button, Paper, Container, MenuItem } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+
+const languages = [
+    { code: 'es', name: 'Español' },
+    { code: 'ca', name: 'Català' },
+    { code: 'eu', name: 'Euskera' },
+    { code: 'gl', name: 'Galego' },
+    { code: 'en', name: 'English' },
+];
 
 const ProfilePage: React.FC = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
+    const { t, i18n } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [dateOfBirth, setDateOfBirth] = useState('');
     const [displayName, setDisplayName] = useState('');
+    const [preferredLanguage, setPreferredLanguage] = useState('es');
 
     useEffect(() => {
         if (user) {
@@ -22,13 +33,7 @@ const ProfilePage: React.FC = () => {
         try {
             setLoading(true);
 
-            // Refresh user session to get latest metadata
-            const { data: { user: currentUser } } = await api.auth.getUser();
-
-            // Get display_name from user metadata
-            setDisplayName(currentUser?.user_metadata?.display_name || '');
-
-            // Get date_of_birth from profiles table
+            // Get profile data including display_name
             const { data, error } = await api.profiles.get(user!.id);
 
             if (error) {
@@ -37,6 +42,9 @@ const ProfilePage: React.FC = () => {
 
             if (data) {
                 setDateOfBirth(data.date_of_birth || '');
+                setPreferredLanguage(data.preferred_language || 'es');
+                // Use display_name from profiles table
+                setDisplayName(data.display_name || user?.user_metadata?.full_name || user?.email || '');
             }
         } catch (error: any) {
             toast.error('Error cargando el perfil: ' + error.message);
@@ -49,18 +57,13 @@ const ProfilePage: React.FC = () => {
         try {
             setLoading(true);
 
-            // Update display_name in Auth user metadata
-            // Note: Updating user metadata via API client is not yet implemented in auth handler
-            // We need to add 'update-user' action to api/auth.ts or api/profiles.ts
-            // For now, let's assume we can update profile data.
-            // Wait, `api.auth.updateUser` is missing.
-            // Let's skip updating user metadata for now or add it.
-            // The original code updated `supabase.auth.updateUser`.
-            
-            // Update date_of_birth in profiles table
+            // Update profile in profiles table
+            // The DB trigger 'sync_profile_to_auth' will handle updating Auth metadata
             const updates = {
                 id: user!.id,
+                display_name: displayName,
                 date_of_birth: dateOfBirth || null,
+                preferred_language: preferredLanguage,
                 updated_at: new Date().toISOString(),
             };
 
@@ -71,6 +74,9 @@ const ProfilePage: React.FC = () => {
             }
 
             toast.success('Perfil actualizado correctamente');
+
+            // Change language immediately
+            i18n.changeLanguage(preferredLanguage);
 
             // Refresh profile to show updated data
             await getProfile();
@@ -90,12 +96,12 @@ const ProfilePage: React.FC = () => {
         <Container maxWidth="sm" sx={{ mt: 4 }}>
             <Paper elevation={3} sx={{ p: 4, borderRadius: 2 }}>
                 <Typography variant="h4" component="h1" gutterBottom align="center" color="primary">
-                    Mi Perfil
+                    {t('profile.title')}
                 </Typography>
                 <Box component="form" noValidate autoComplete="off" sx={{ mt: 3 }}>
                     <TextField
                         id="email"
-                        label="Correo Electrónico"
+                        label={t('profile.email')}
                         value={user?.email}
                         fullWidth
                         margin="normal"
@@ -104,17 +110,35 @@ const ProfilePage: React.FC = () => {
                     />
                     <TextField
                         id="displayName"
-                        label="Nombre para mostrar"
+                        label={t('profile.displayName')}
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value)}
                         fullWidth
                         margin="normal"
                         variant="outlined"
-                        helperText="Este nombre será visible para otros usuarios"
+                        helperText={t('profile.displayNameHelper')}
                     />
+
+                    <TextField
+                        select
+                        id="preferredLanguage"
+                        label={t('profile.preferredLanguage')}
+                        value={preferredLanguage}
+                        onChange={(e) => setPreferredLanguage(e.target.value)}
+                        fullWidth
+                        margin="normal"
+                        variant="outlined"
+                        helperText={t('profile.preferredLanguageHelper')}
+                    >
+                        {languages.map((option) => (
+                            <MenuItem key={option.code} value={option.code}>
+                                {option.name}
+                            </MenuItem>
+                        ))}
+                    </TextField>
                     <TextField
                         id="dateOfBirth"
-                        label="Fecha de Nacimiento"
+                        label={t('profile.dateOfBirth')}
                         type="date"
                         value={dateOfBirth}
                         onChange={(e) => setDateOfBirth(e.target.value)}
@@ -134,7 +158,7 @@ const ProfilePage: React.FC = () => {
                         onClick={updateProfile}
                         disabled={loading}
                     >
-                        {loading ? 'Guardando...' : 'Guardar Cambios'}
+                        {loading ? t('profile.saving') : t('profile.save')}
                     </Button>
                 </Box>
             </Paper>

@@ -40,7 +40,7 @@ export const handler = async (req: IncomingMessage, res: ServerResponse) => {
 
             const { data, error } = await supabase
                 .from("profiles")
-                .select("date_of_birth")
+                .select("date_of_birth, preferred_language, display_name")
                 .eq("id", id)
                 .single();
 

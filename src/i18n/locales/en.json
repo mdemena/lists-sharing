@@ -64,5 +64,16 @@
             "share": "Share",
             "delete": "Delete"
         }
+    },
+    "profile": {
+        "title": "My Profile",
+        "email": "Email Address",
+        "displayName": "Display Name",
+        "displayNameHelper": "This name will be visible to other users",
+        "preferredLanguage": "Preferred Language",
+        "preferredLanguageHelper": "Select the default application language",
+        "dateOfBirth": "Date of Birth",
+        "save": "Save Changes",
+        "saving": "Saving..."
     }
 }

@@ -64,5 +64,16 @@
             "share": "Compartir",
             "delete": "Eliminar"
         }
+    },
+    "profile": {
+        "title": "Mi Perfil",
+        "email": "Correo Electrónico",
+        "displayName": "Nombre para mostrar",
+        "displayNameHelper": "Este nombre será visible para otros usuarios",
+        "preferredLanguage": "Idioma Preferido",
+        "preferredLanguageHelper": "Selecciona el idioma por defecto de la aplicación",
+        "dateOfBirth": "Fecha de Nacimiento",
+        "save": "Guardar Cambios",
+        "saving": "Guardando..."
     }
 }

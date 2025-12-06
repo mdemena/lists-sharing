@@ -64,5 +64,16 @@
             "share": "Compartir",
             "delete": "Esborra"
         }
+    },
+    "profile": {
+        "title": "El Meu Perfil",
+        "email": "Correu Electrònic",
+        "displayName": "Nom per mostrar",
+        "displayNameHelper": "Aquest nom serà visible per altres usuaris",
+        "preferredLanguage": "Idioma Preferit",
+        "preferredLanguageHelper": "Selecciona l'idioma per defecte de l'aplicació",
+        "dateOfBirth": "Data de Naixement",
+        "save": "Desa els canvis",
+        "saving": "Desant..."
     }
 }

@@ -1,5 +1,5 @@
 import { IncomingMessage, ServerResponse } from "http";
-import { getSupabase } from "./supabase-client";
+import { getSupabase, createAdminClient } from "./supabase-client";
 
 const readBody = (req: IncomingMessage): Promise<any> => {
     return new Promise((resolve, reject) => {
@@ -72,19 +72,35 @@ export const handler = async (req: IncomingMessage, res: ServerResponse) => {
             }
 
             if (action === "update-user") {
-                // const { data: userData } = body;
-                // Note: Updating user usually requires a valid session.
-                // Since we are stateless here, we might need to pass the access token
-                // or handle it differently. For now, let's assume the client passes
-                // the access token in headers if needed, but supabase-js client
-                // on backend is admin/service role or anon.
-                // Actually, `supabase.auth.updateUser` works on the *current* session.
-                // Without passing the user's JWT to the backend client, we can't update *their* user.
-                // We might need to create a client *with* the user's token for this request.
+                const authHeader = req.headers.authorization;
+                const token = authHeader?.split(" ")[1];
+                if (!token) {
+                    res.statusCode = 401;
+                    res.end(JSON.stringify({ error: "Unauthorized" }));
+                    return;
+                }
 
-                // For this MVP migration, let's see if we can just forward the token.
-                // But `supabase-client.ts` creates a static client.
-                // We'll need to handle this. For now, basic auth flows.
+                const { data: updates } = body;
+
+                // 1. Verify user and get ID
+                const { data: { user }, error: userError } = await getSupabase().auth.getUser(token);
+                if (userError || !user) {
+                    res.statusCode = 401;
+                    res.end(JSON.stringify({ error: "Invalid token" }));
+                    return;
+                }
+
+                // 2. Update user using Admin API (updateUserById) since we have service role
+                // Note: getSupabase() usually returns a client with ANNON_KEY
+                // We must use createAdminClient() to get SERVICE_ROLE_KEY access
+                const { data, error } = await createAdminClient().auth.admin.updateUserById(
+                    user.id,
+                    { user_metadata: updates }
+                );
+
+                if (error) throw error;
+                res.end(JSON.stringify(data));
+                return;
             }
         }
 
