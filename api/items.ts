@@ -78,6 +78,20 @@ export const handler = async (req: IncomingMessage, res: ServerResponse) => {
             const body = await readBody(req);
             if (!itemId) throw new Error("Item ID required for update");
 
+            // Handle special placeholder for current user
+            if (body.adjudicated_by === "current_user") {
+                const {
+                    data: { user },
+                    error: userError,
+                } = await supabase.auth.getUser();
+
+                if (userError || !user) {
+                    res.statusCode = 401;
+                    throw new Error("User must be logged in to adjudicate items");
+                }
+                body.adjudicated_by = user.id;
+            }
+
             const { data, error } = await supabase
                 .from("list_items")
                 .update(body)

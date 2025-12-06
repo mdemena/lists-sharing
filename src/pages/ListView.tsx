@@ -22,11 +22,16 @@ import {
     Avatar,
     useTheme,
     alpha,
+    Link,
+    Menu,
+    MenuItem,
+    ListItemIcon,
+    ListItemText,
 } from '@mui/material';
-import { FaPlus, FaTh, FaList, FaDownload, FaEnvelope } from 'react-icons/fa';
+import { FaPlus, FaTh, FaList, FaDownload, FaEnvelope, FaExternalLinkAlt, FaLink } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api';
-import type { List, ListItem } from '../types';
+import type { List, ListItem, ExternalUrl } from '../types';
 import toast from 'react-hot-toast';
 import AuthRequiredDialog from '../components/AuthRequiredDialog';
 import { ItemCard } from '../components/cards';
@@ -67,6 +72,10 @@ const ListView: React.FC = () => {
     // Export state
     const [emailDialogOpen, setEmailDialogOpen] = useState(false);
     const [anchorElExport, setAnchorElExport] = useState<null | HTMLElement>(null);
+
+    // Links Menu state
+    const [linksMenuAnchor, setLinksMenuAnchor] = useState<null | HTMLElement>(null);
+    const [currentLinks, setCurrentLinks] = useState<ExternalUrl[]>([]);
 
     // Fetch data
     const fetchListData = async () => {
@@ -142,10 +151,10 @@ const ListView: React.FC = () => {
                 });
                 if (error) throw new Error(error);
 
-                setItems(items.map(i => i.id === formData.id ? { 
-                    ...i, 
-                    ...formData, 
-                    importance: formData.importance as 1 | 2 | 3 | 4 | 5 
+                setItems(items.map(i => i.id === formData.id ? {
+                    ...i,
+                    ...formData,
+                    importance: formData.importance as 1 | 2 | 3 | 4 | 5
                 } : i));
                 toast.success('Ítem actualizado.');
             } else {
@@ -208,8 +217,8 @@ const ListView: React.FC = () => {
             const { error } = await api.items.adjudicate(item.id, adjudicate);
             if (error) throw new Error(error);
 
-            setItems(items.map(i => 
-                i.id === item.id 
+            setItems(items.map(i =>
+                i.id === item.id
                     ? { ...i, is_adjudicated: adjudicate, adjudicated_by: adjudicate ? user.id : null }
                     : i
             ));
@@ -279,6 +288,7 @@ const ListView: React.FC = () => {
                         <TableCell>Importancia</TableCell>
                         <TableCell>Coste Est.</TableCell>
                         {!isOwnerMode && <TableCell>Estado</TableCell>}
+                        <TableCell align="center">Enlaces</TableCell>
                         <TableCell align="right">Acciones</TableCell>
                     </TableRow>
                 </TableHead>
@@ -286,10 +296,10 @@ const ListView: React.FC = () => {
                     {items.map((item) => {
                         const isAdjudicatedByCurrentUser = item.adjudicated_by === user?.id;
                         return (
-                            <TableRow 
-                                key={item.id} 
-                                hover 
-                                sx={{ 
+                            <TableRow
+                                key={item.id}
+                                hover
+                                sx={{
                                     cursor: isOwnerMode ? 'pointer' : 'default',
                                     borderLeft: !isOwnerMode ? `4px solid ${item.is_adjudicated ? theme.palette.error.main : theme.palette.success.main}` : undefined,
                                 }}
@@ -304,22 +314,24 @@ const ListView: React.FC = () => {
                                 </TableCell>
                                 <TableCell><strong>{item.name}</strong></TableCell>
                                 <TableCell>
-                                    <Tooltip title={item.description || ''}>
-                                        <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
-                                            {item.description || '-'}
-                                        </Typography>
-                                    </Tooltip>
+                                    <Box>
+                                        <Tooltip title={item.description || ''}>
+                                            <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
+                                                {item.description || '-'}
+                                            </Typography>
+                                        </Tooltip>
+                                    </Box>
                                 </TableCell>
                                 <TableCell>{priorities.find(p => p.id === item.importance)?.name || 'N/A'}</TableCell>
                                 <TableCell>€{item.estimated_cost?.toFixed(2) || '0.00'}</TableCell>
                                 {!isOwnerMode && (
                                     <TableCell>
                                         <Box sx={{
-                                            bgcolor: item.is_adjudicated 
-                                                ? alpha(theme.palette.error.main, 0.1) 
+                                            bgcolor: item.is_adjudicated
+                                                ? alpha(theme.palette.error.main, 0.1)
                                                 : alpha(theme.palette.success.main, 0.1),
-                                            color: item.is_adjudicated 
-                                                ? theme.palette.error.main 
+                                            color: item.is_adjudicated
+                                                ? theme.palette.error.main
                                                 : theme.palette.success.main,
                                             px: 1, py: 0.5, borderRadius: 1, display: 'inline-block',
                                             fontWeight: 'bold', fontSize: '0.75rem'
@@ -328,6 +340,24 @@ const ListView: React.FC = () => {
                                         </Box>
                                     </TableCell>
                                 )}
+                                <TableCell align="center">
+                                    {item.urls && item.urls.length > 0 ? (
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            startIcon={<FaLink />}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setCurrentLinks(item.urls || []);
+                                                setLinksMenuAnchor(e.currentTarget);
+                                            }}
+                                        >
+                                            Ver ({item.urls.length})
+                                        </Button>
+                                    ) : (
+                                        <Typography variant="caption" color="text.secondary">-</Typography>
+                                    )}
+                                </TableCell>
                                 <TableCell align="right">
                                     <Stack direction="row" spacing={0.5} justifyContent="flex-end">
                                         {isOwnerMode ? (
@@ -478,6 +508,29 @@ const ListView: React.FC = () => {
             )}
 
             {/* Export Menu */}
+            <Menu
+                anchorEl={linksMenuAnchor}
+                open={Boolean(linksMenuAnchor)}
+                onClose={() => setLinksMenuAnchor(null)}
+                onClick={(e) => e.stopPropagation()}
+            >
+                {currentLinks.map((url, index) => (
+                    <MenuItem
+                        key={index}
+                        component="a"
+                        href={url.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setLinksMenuAnchor(null)}
+                    >
+                        <ListItemIcon>
+                            <FaExternalLinkAlt size={14} />
+                        </ListItemIcon>
+                        <ListItemText primary={url.label || url.url} secondary={url.label ? url.url : undefined} />
+                    </MenuItem>
+                ))}
+            </Menu>
+
             <ExportMenu
                 anchorEl={anchorElExport}
                 onClose={handleExportClose}
