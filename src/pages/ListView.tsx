@@ -38,6 +38,7 @@ import { ItemCard } from '../components/cards';
 import { ConfirmDeleteDialog, ItemFormModal, EmailExportDialog, type ItemFormData, type ExportFormat } from '../components/dialogs';
 import { ExportMenu } from '../components/export';
 import { useExport } from '../hooks';
+import { ensureProtocol } from '../utils/url';
 
 const priorities = [
     { id: 3, name: 'Importante' },
@@ -519,7 +520,7 @@ const ListView: React.FC = () => {
                     <MenuItem
                         key={index}
                         component="a"
-                        href={url.url}
+                        href={ensureProtocol(url.url)}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => setLinksMenuAnchor(null)}

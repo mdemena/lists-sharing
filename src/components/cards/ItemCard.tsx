@@ -16,6 +16,7 @@ import {
 import { FaEdit, FaTrash, FaCheck, FaTimes, FaStar, FaEuroSign, FaExternalLinkAlt } from 'react-icons/fa';
 import type { ListItem } from '../../types';
 import ImageCarousel from '../media/ImageCarousel';
+import { ensureProtocol } from '../../utils/url';
 
 export interface ItemCardProps {
     item: ListItem;
@@ -117,7 +118,7 @@ const ItemCard: React.FC<ItemCardProps> = ({
                                     endIcon={<FaExternalLinkAlt size={10} />}
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        window.open(extUrl.url, '_blank');
+                                        window.open(ensureProtocol(extUrl.url), '_blank');
                                     }}
                                     sx={{ textTransform: 'none', fontSize: '0.75rem' }}
                                 >
