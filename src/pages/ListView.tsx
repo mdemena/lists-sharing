@@ -146,8 +146,12 @@ const ListView: React.FC = () => {
                 const { error } = await api.items.update(formData.id, {
                     name: formData.name.trim(),
                     description: formData.description.trim(),
-                    image_urls: formData.image_urls.filter(img => img.url.trim()),
-                    urls: formData.urls.filter(url => url.url.trim()),
+                    image_urls: formData.image_urls
+                        .filter(img => img.url.trim())
+                        .map(img => ({ ...img, url: img.url.trim(), label: img.label.trim() })),
+                    urls: formData.urls
+                        .filter(url => url.url.trim())
+                        .map(url => ({ ...url, url: url.url.trim(), label: url.label.trim() })),
                     importance: formData.importance,
                     estimated_cost: formData.estimated_cost,
                 });
@@ -165,8 +169,12 @@ const ListView: React.FC = () => {
                     list_id: list.id,
                     name: formData.name.trim(),
                     description: formData.description.trim(),
-                    image_urls: formData.image_urls.filter(img => img.url.trim()),
-                    urls: formData.urls.filter(url => url.url.trim()),
+                    image_urls: formData.image_urls
+                        .filter(img => img.url.trim())
+                        .map(img => ({ ...img, url: img.url.trim(), label: img.label.trim() })),
+                    urls: formData.urls
+                        .filter(url => url.url.trim())
+                        .map(url => ({ ...url, url: url.url.trim(), label: url.label.trim() })),
                     importance: formData.importance,
                     estimated_cost: formData.estimated_cost,
                 });

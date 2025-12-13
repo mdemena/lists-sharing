@@ -1,7 +1,8 @@
 export const ensureProtocol = (url: string): string => {
-    if (!url) return '';
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-        return url;
+    if (!url) return "";
+    const trimmedUrl = url.trim();
+    if (trimmedUrl.startsWith("http://") || trimmedUrl.startsWith("https://")) {
+        return trimmedUrl;
     }
-    return `https://${url}`;
+    return `https://${trimmedUrl}`;
 };
