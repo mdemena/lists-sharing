@@ -51,7 +51,11 @@
         "newList": "New List",
         "emptyMyLists": "You don't have any lists yet",
         "emptySharedLists": "No lists shared with you",
+        "emptyInactiveLists": "You don't have any inactive lists",
         "createFirstList": "Create your first list",
+        "activeLists": "Active",
+        "inactiveLists": "Inactive",
+        "deactivateConfirm": "Deactivating the list will remove all sharing links. Users you shared it with will no longer be able to see it. Do you want to continue?",
         "columns": {
             "name": "Name",
             "description": "Description",
@@ -62,7 +66,9 @@
             "email": "Email",
             "edit": "Edit",
             "share": "Share",
-            "delete": "Delete"
+            "delete": "Delete",
+            "activate": "Activate list",
+            "deactivate": "Deactivate list"
         }
     },
     "profile": {

@@ -149,14 +149,16 @@ export const handler = async (req: IncomingMessage, res: ServerResponse) => {
                 }
 
                 // Query list_shares where user_id matches, then join with lists and shared_by profile
+                // Only return active lists
                 const { data, error } = await supabase
                     .from("list_shares")
                     .select(`
                         list_id, 
-                        lists(*),
+                        lists!inner(*),
                         shared_by_profile:profiles!list_shares_shared_by_fkey(display_name, email)
                     `)
-                    .eq("user_id", user.id);
+                    .eq("user_id", user.id)
+                    .eq("lists.status", "active");
 
                 if (error) throw error;
 
@@ -270,11 +272,59 @@ export const handler = async (req: IncomingMessage, res: ServerResponse) => {
             return;
         }
 
-        // Add PUT/DELETE if needed, though Dashboard.tsx mainly does GET and POST for lists.
-        // Dashboard.tsx doesn't seem to have DELETE/UPDATE for lists directly shown in the snippets,
-        // but it's good practice to have them or add them when needed.
-        // The original code shows `handleCreateList` (POST) and `fetchUserLists` (GET).
-        // `ListView.tsx` fetches a single list (GET).
+        if (req.method === "PATCH") {
+            if (!id) throw new Error("List ID required");
+
+            const body = await readBody(req);
+            const { status } = body;
+
+            if (!status || !["active", "inactive"].includes(status)) {
+                res.statusCode = 400;
+                res.end(
+                    JSON.stringify({
+                        error:
+                            "Invalid status. Must be 'active' or 'inactive'.",
+                    }),
+                );
+                return;
+            }
+
+            const { data: { user }, error: userError } = await supabase.auth
+                .getUser();
+            if (userError || !user) {
+                throw userError || new Error("User not found");
+            }
+
+            // Update list status (RLS + owner check)
+            const { data, error } = await supabase
+                .from("lists")
+                .update({
+                    status,
+                    status_changed_at: new Date().toISOString(),
+                })
+                .eq("id", id)
+                .eq("owner_id", user.id)
+                .select()
+                .single();
+
+            if (error) throw error;
+
+            // If deactivating, remove all sharing links
+            if (status === "inactive") {
+                const supabaseAdmin = createAdminClient();
+                const { error: deleteSharesError } = await supabaseAdmin
+                    .from("list_shares")
+                    .delete()
+                    .eq("list_id", id);
+
+                if (deleteSharesError) {
+                    console.error("Error deleting shares:", deleteSharesError);
+                }
+            }
+
+            res.end(JSON.stringify(data));
+            return;
+        }
 
         res.statusCode = 405;
         res.end(JSON.stringify({ error: "Method not allowed" }));

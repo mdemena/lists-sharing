@@ -51,7 +51,11 @@
         "newList": "Zerrenda Berria",
         "emptyMyLists": "Ez duzu zerrendarik oraindik",
         "emptySharedLists": "Ez dago zurekin partekatutako zerrendarik",
+        "emptyInactiveLists": "Ez duzu zerrenda inaktiborik",
         "createFirstList": "Sortu zure lehen zerrenda",
+        "activeLists": "Aktiboak",
+        "inactiveLists": "Inaktiboak",
+        "deactivateConfirm": "Zerrenda desaktibatzeak partekatzeko lotura guztiak ezabatuko ditu. Partekatu zenuen erabiltzaileek ezingo dute ikusi. Jarraitu nahi duzu?",
         "columns": {
             "name": "Izena",
             "description": "Deskribapena",
@@ -62,7 +66,9 @@
             "email": "Postaz bidali",
             "edit": "Editatu",
             "share": "Partekatu",
-            "delete": "Ezabatu"
+            "delete": "Ezabatu",
+            "activate": "Zerrenda aktibatu",
+            "deactivate": "Zerrenda desaktibatu"
         }
     },
     "profile": {
