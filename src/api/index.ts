@@ -118,7 +118,7 @@ export const api = {
         updateUser: async (updates: any) => {
             try {
                 const response = await client.post("/auth?action=update-user", {
-                    data: updates
+                    data: updates,
                 });
                 return { data: { user: response.data }, error: null };
             } catch (error: any) {
@@ -215,6 +215,19 @@ export const api = {
         sendListFile: async (data: any) => {
             try {
                 const response = await client.post("/send-list-file", data);
+                return { data: response.data, error: null };
+            } catch (error: any) {
+                return {
+                    data: null,
+                    error: error.response?.data?.error || error.message,
+                };
+            }
+        },
+        toggleStatus: async (id: string, status: "active" | "inactive") => {
+            try {
+                const response = await client.patch(`/lists?id=${id}`, {
+                    status,
+                });
                 return { data: response.data, error: null };
             } catch (error: any) {
                 return {

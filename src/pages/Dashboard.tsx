@@ -21,8 +21,14 @@ import {
     Tooltip,
     Tabs,
     Tab,
+    Chip,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
 } from '@mui/material';
-import { FaPlus, FaTh, FaList as FaListIcon, FaDownload, FaEnvelope, FaTrash, FaEdit, FaShareSquare } from 'react-icons/fa';
+import { FaPlus, FaTh, FaList as FaListIcon, FaDownload, FaEnvelope, FaTrash, FaEdit, FaShareSquare, FaToggleOn, FaToggleOff } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api';
 import type { List, ListItem } from '../types';
@@ -47,6 +53,7 @@ const Dashboard: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
     const [activeTab, setActiveTab] = useState(0);
+    const [statusFilter, setStatusFilter] = useState<'active' | 'inactive'>('active');
 
     // Modals state
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -56,6 +63,10 @@ const Dashboard: React.FC = () => {
     // Delete dialog state
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [listToDelete, setListToDelete] = useState<List | null>(null);
+
+    // Toggle status dialog state
+    const [toggleStatusDialogOpen, setToggleStatusDialogOpen] = useState(false);
+    const [listToToggle, setListToToggle] = useState<List | null>(null);
 
     // Export state
     const [emailDialogOpen, setEmailDialogOpen] = useState(false);
@@ -149,6 +160,44 @@ const Dashboard: React.FC = () => {
         }
     };
 
+    // Toggle status handlers
+    const handleToggleStatus = (list: List) => {
+        if (list.status === 'active') {
+            // Show confirmation dialog when deactivating (shares will be removed)
+            setListToToggle(list);
+            setToggleStatusDialogOpen(true);
+        } else {
+            // Activate immediately (no shares to remove)
+            confirmToggleStatus(list);
+        }
+    };
+
+    const confirmToggleStatus = async (listOverride?: List) => {
+        const list = listOverride || listToToggle;
+        if (!list) return;
+
+        const newStatus = list.status === 'active' ? 'inactive' : 'active';
+
+        try {
+            const { data, error } = await api.lists.toggleStatus(list.id, newStatus);
+            if (error) throw new Error(error);
+
+            // Update local state
+            setLists(lists.map(l => l.id === list.id ? (data as List) : l));
+
+            if (newStatus === 'inactive') {
+                toast.success('Lista desactivada. Se eliminaron los vínculos de compartición.');
+            } else {
+                toast.success('Lista activada correctamente.');
+            }
+        } catch (error: any) {
+            toast.error(error.message || 'Error al cambiar el estado de la lista');
+        } finally {
+            setToggleStatusDialogOpen(false);
+            setListToToggle(null);
+        }
+    };
+
     const handleViewModeChange = (
         _event: React.MouseEvent<HTMLElement>,
         newViewMode: 'grid' | 'table',
@@ -205,13 +254,18 @@ const Dashboard: React.FC = () => {
         }
     };
 
-    // Render helpers
-    const currentLists = activeTab === 0 ? lists : sharedLists;
+    // Render helpers — filter owned lists by status sub-tab
+    const filteredLists = activeTab === 0
+        ? lists.filter(l => l.status === statusFilter)
+        : sharedLists;
     const isSharedTab = activeTab === 1;
+
+    const activeLists = lists.filter(l => l.status === 'active');
+    const inactiveLists = lists.filter(l => l.status === 'inactive');
 
     const renderGridView = () => (
         <Grid container spacing={3}>
-            {currentLists.map((list) => (
+            {filteredLists.map((list) => (
                 <Grid key={list.id} size={{ xs: 12, sm: 6, md: 4 }}>
                     <ListCard
                         list={list}
@@ -221,6 +275,7 @@ const Dashboard: React.FC = () => {
                         onDelete={isSharedTab ? undefined : handleDeleteList}
                         onExportClick={handleExportClick}
                         onEmailClick={handleOpenEmailDialog}
+                        onToggleStatus={isSharedTab ? undefined : handleToggleStatus}
                     />
                 </Grid>
             ))}
@@ -240,14 +295,29 @@ const Dashboard: React.FC = () => {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {currentLists.map((list) => (
+                    {filteredLists.map((list) => (
                         <TableRow
                             key={list.id}
                             hover
-                            sx={{ cursor: 'pointer' }}
+                            sx={{
+                                cursor: 'pointer',
+                                opacity: list.status === 'inactive' ? 0.65 : 1,
+                            }}
                             onClick={() => navigate(isSharedTab ? `/share/${list.id}` : `/list/${list.id}/edit`)}
                         >
-                            <TableCell>{list.name}</TableCell>
+                            <TableCell>
+                                <Stack direction="row" alignItems="center" spacing={1}>
+                                    <span>{list.name}</span>
+                                    {list.status === 'inactive' && (
+                                        <Chip
+                                            label={t('dashboard.inactiveLists')}
+                                            size="small"
+                                            color="warning"
+                                            variant="outlined"
+                                        />
+                                    )}
+                                </Stack>
+                            </TableCell>
                             <TableCell>{list.description || 'Sin descripción'}</TableCell>
                             {isSharedTab && <TableCell>{list.shared_by_name || '-'}</TableCell>}
                             <TableCell align="right">
@@ -277,6 +347,11 @@ const Dashboard: React.FC = () => {
                                             <Tooltip title={t('dashboard.tooltips.delete')}>
                                                 <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); handleDeleteList(list); }}>
                                                     <FaTrash size={14} />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title={list.status === 'inactive' ? t('dashboard.tooltips.activate') : t('dashboard.tooltips.deactivate')}>
+                                                <IconButton size="small" color="warning" onClick={(e) => { e.stopPropagation(); handleToggleStatus(list); }}>
+                                                    {list.status === 'inactive' ? <FaToggleOff size={14} /> : <FaToggleOn size={14} />}
                                                 </IconButton>
                                             </Tooltip>
                                         </>
@@ -332,23 +407,49 @@ const Dashboard: React.FC = () => {
                 </Stack>
             </Stack>
 
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
                 <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)}>
                     <Tab label={`${t('dashboard.myLists')} (${lists.length})`} />
                     <Tab label={`${t('dashboard.sharedWithMe')} (${sharedLists.length})`} />
                 </Tabs>
             </Box>
 
-            {currentLists.length === 0 ? (
+            {/* Status sub-tabs for "My Lists" */}
+            {activeTab === 0 && (
+                <Box sx={{ mb: 3 }}>
+                    <Tabs
+                        value={statusFilter}
+                        onChange={(_, v) => setStatusFilter(v)}
+                        textColor="secondary"
+                        indicatorColor="secondary"
+                        sx={{ minHeight: 36 }}
+                    >
+                        <Tab
+                            value="active"
+                            label={`${t('dashboard.activeLists')} (${activeLists.length})`}
+                            sx={{ minHeight: 36, py: 0.5 }}
+                        />
+                        <Tab
+                            value="inactive"
+                            label={`${t('dashboard.inactiveLists')} (${inactiveLists.length})`}
+                            sx={{ minHeight: 36, py: 0.5 }}
+                        />
+                    </Tabs>
+                </Box>
+            )}
+
+            {filteredLists.length === 0 ? (
                 <Box textAlign="center" py={8}>
 
                     <Typography variant="h6" color="text.secondary" mb={2}>
                         {activeTab === 0
-                            ? t('dashboard.emptyMyLists')
+                            ? (statusFilter === 'active'
+                                ? t('dashboard.emptyMyLists')
+                                : t('dashboard.emptyInactiveLists'))
                             : t('dashboard.emptySharedLists')
                         }
                     </Typography>
-                    {activeTab === 0 && (
+                    {activeTab === 0 && statusFilter === 'active' && (
                         <Button
                             variant="contained"
                             startIcon={<FaPlus />}
@@ -392,6 +493,27 @@ const Dashboard: React.FC = () => {
                 itemName={listToDelete?.name || ''}
                 itemType="lista"
             />
+
+            {/* Deactivate Confirmation Dialog */}
+            <Dialog
+                open={toggleStatusDialogOpen}
+                onClose={() => { setToggleStatusDialogOpen(false); setListToToggle(null); }}
+            >
+                <DialogTitle>{t('dashboard.tooltips.deactivate')}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        {t('dashboard.deactivateConfirm')}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => { setToggleStatusDialogOpen(false); setListToToggle(null); }}>
+                        {t('common.cancel')}
+                    </Button>
+                    <Button onClick={() => confirmToggleStatus()} color="warning" variant="contained">
+                        {t('dashboard.tooltips.deactivate')}
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             {/* Share Modal */}
             {listToShare && (

@@ -32,6 +32,8 @@ export interface List {
     name: string;
     description: string | null;
     created_at: string; // timestamp
+    status: "active" | "inactive";
+    status_changed_at: string; // timestamp
     list_shares?: { count: number }[];
     shared_by_name?: string; // Nombre del usuario que compartió la lista
 }

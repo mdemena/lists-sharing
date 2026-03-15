@@ -52,7 +52,11 @@
         "newList": "Nova Llista",
         "emptyMyLists": "Encara no tens llistes",
         "emptySharedLists": "No tens llistes compartides amb tu",
+        "emptyInactiveLists": "No tens llistes inactives",
         "createFirstList": "Crea la teva primera llista",
+        "activeLists": "Actives",
+        "inactiveLists": "Inactives",
+        "deactivateConfirm": "En desactivar la llista s'eliminaran tots els vincles de compartició. Els usuaris amb qui l'has compartida ja no la podran veure. Vols continuar?",
         "columns": {
             "name": "Nom",
             "description": "Descripció",
@@ -63,7 +67,9 @@
             "email": "Enviar per Email",
             "edit": "Edita",
             "share": "Compartir",
-            "delete": "Esborra"
+            "delete": "Esborra",
+            "activate": "Activar llista",
+            "deactivate": "Desactivar llista"
         }
     },
     "profile": {

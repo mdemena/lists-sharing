@@ -26,8 +26,14 @@ import {
     MenuItem,
     ListItemIcon,
     ListItemText,
+    Chip,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
 } from '@mui/material';
-import { FaPlus, FaTh, FaList, FaDownload, FaEnvelope, FaExternalLinkAlt, FaLink } from 'react-icons/fa';
+import { FaPlus, FaTh, FaList, FaDownload, FaEnvelope, FaExternalLinkAlt, FaLink, FaToggleOn, FaToggleOff } from 'react-icons/fa';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api';
 import type { List, ListItem, ExternalUrl } from '../types';
@@ -80,6 +86,9 @@ const ListView: React.FC = () => {
     // Export state
     const [emailDialogOpen, setEmailDialogOpen] = useState(false);
     const [anchorElExport, setAnchorElExport] = useState<null | HTMLElement>(null);
+
+    // Toggle status dialog state
+    const [toggleStatusDialogOpen, setToggleStatusDialogOpen] = useState(false);
 
     // Links Menu state
     const [linksMenuAnchor, setLinksMenuAnchor] = useState<null | HTMLElement>(null);
@@ -160,8 +169,12 @@ const ListView: React.FC = () => {
                 const { error } = await api.items.update(formData.id, {
                     name: formData.name.trim(),
                     description: formData.description.trim(),
-                    image_urls: formData.image_urls.filter(img => img.url.trim()),
-                    urls: formData.urls.filter(url => url.url.trim()),
+                    image_urls: formData.image_urls
+                        .filter(img => img.url.trim())
+                        .map(img => ({ ...img, url: img.url.trim(), label: img.label.trim() })),
+                    urls: formData.urls
+                        .filter(url => url.url.trim())
+                        .map(url => ({ ...url, url: url.url.trim(), label: url.label.trim() })),
                     importance: formData.importance,
                     estimated_cost: formData.estimated_cost,
                 });
@@ -179,8 +192,12 @@ const ListView: React.FC = () => {
                     list_id: list.id,
                     name: formData.name.trim(),
                     description: formData.description.trim(),
-                    image_urls: formData.image_urls.filter(img => img.url.trim()),
-                    urls: formData.urls.filter(url => url.url.trim()),
+                    image_urls: formData.image_urls
+                        .filter(img => img.url.trim())
+                        .map(img => ({ ...img, url: img.url.trim(), label: img.label.trim() })),
+                    urls: formData.urls
+                        .filter(url => url.url.trim())
+                        .map(url => ({ ...url, url: url.url.trim(), label: url.label.trim() })),
                     importance: formData.importance,
                     estimated_cost: formData.estimated_cost,
                 });
@@ -295,6 +312,38 @@ const ListView: React.FC = () => {
         if (!list) return;
         await sendViaEmail(items, format, list.name, email);
         setEmailDialogOpen(false);
+    };
+
+    // Toggle status handler
+    const handleToggleStatus = () => {
+        if (!list) return;
+        if (list.status === 'active') {
+            setToggleStatusDialogOpen(true);
+        } else {
+            confirmToggleStatus();
+        }
+    };
+
+    const confirmToggleStatus = async () => {
+        if (!list) return;
+        const newStatus = list.status === 'active' ? 'inactive' : 'active';
+
+        try {
+            const { data, error } = await api.lists.toggleStatus(list.id, newStatus);
+            if (error) throw new Error(error);
+
+            setList(data as List);
+
+            if (newStatus === 'inactive') {
+                toast.success('Lista desactivada. Se eliminaron los vínculos de compartición.');
+            } else {
+                toast.success('Lista activada correctamente.');
+            }
+        } catch (error: any) {
+            toast.error(error.message || 'Error al cambiar el estado de la lista');
+        } finally {
+            setToggleStatusDialogOpen(false);
+        }
     };
 
     // Render helpers
@@ -483,9 +532,19 @@ const ListView: React.FC = () => {
                 spacing={2}
             >
                 <Box>
-                    <Typography variant="h4" component="h1" fontWeight="bold">
-                        {list.name}
-                    </Typography>
+                    <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="h4" component="h1" fontWeight="bold">
+                            {list.name}
+                        </Typography>
+                        {list.status === 'inactive' && (
+                            <Chip
+                                label={t('dashboard.inactiveLists')}
+                                size="small"
+                                color="warning"
+                                variant="outlined"
+                            />
+                        )}
+                    </Stack>
                     {list.description && (
                         <Typography variant="body1" color="text.secondary" mt={1}>
                             {list.description}
@@ -502,6 +561,18 @@ const ListView: React.FC = () => {
                         <ToggleButton value="grid"><FaTh /></ToggleButton>
                         <ToggleButton value="table"><FaList /></ToggleButton>
                     </ToggleButtonGroup>
+                    {isOwnerMode && (
+                        <Tooltip title={list.status === 'inactive' ? t('dashboard.tooltips.activate') : t('dashboard.tooltips.deactivate')}>
+                            <Button
+                                variant="outlined"
+                                color={list.status === 'inactive' ? 'success' : 'warning'}
+                                startIcon={list.status === 'inactive' ? <FaToggleOff /> : <FaToggleOn />}
+                                onClick={handleToggleStatus}
+                            >
+                                {list.status === 'inactive' ? t('dashboard.tooltips.activate') : t('dashboard.tooltips.deactivate')}
+                            </Button>
+                        </Tooltip>
+                    )}
                     <Button
                         variant="outlined"
                         startIcon={<FaDownload />}
@@ -612,6 +683,7 @@ const ListView: React.FC = () => {
                 itemType="elemento"
             />
 
+<<<<<<< HEAD
             {/* Move Item Dialog */}
             <MoveItemDialog
                 open={moveDialogOpen}
@@ -621,6 +693,28 @@ const ListView: React.FC = () => {
                 availableLists={userLists.filter(l => l.id !== listId)}
                 isLoading={isMoveLoading}
             />
+=======
+            {/* Deactivate Confirmation Dialog */}
+            <Dialog
+                open={toggleStatusDialogOpen}
+                onClose={() => setToggleStatusDialogOpen(false)}
+            >
+                <DialogTitle>{t('dashboard.tooltips.deactivate')}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        {t('dashboard.deactivateConfirm')}
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setToggleStatusDialogOpen(false)}>
+                        {t('common.cancel')}
+                    </Button>
+                    <Button onClick={confirmToggleStatus} color="warning" variant="contained">
+                        {t('dashboard.tooltips.deactivate')}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+>>>>>>> acf2b481f4fd1e08d0db90aff0f15bce2efcb91b
 
             {/* Auth Required Dialog */}
             <AuthRequiredDialog

@@ -10,9 +10,11 @@ import {
     Stack,
     IconButton,
     Tooltip,
+    Chip,
 } from '@mui/material';
-import { FaList, FaShareSquare, FaDownload, FaEnvelope, FaTrash } from 'react-icons/fa';
+import { FaList, FaShareSquare, FaDownload, FaEnvelope, FaTrash, FaToggleOn, FaToggleOff } from 'react-icons/fa';
 import type { List } from '../../types';
+import { useTranslation } from 'react-i18next';
 
 export interface ListCardProps {
     list: List;
@@ -22,6 +24,7 @@ export interface ListCardProps {
     onDelete?: (list: List) => void;
     onExportClick?: (event: React.MouseEvent<HTMLButtonElement>, list: List) => void;
     onEmailClick?: (list: List) => void;
+    onToggleStatus?: (list: List) => void;
 }
 
 const ListCard: React.FC<ListCardProps> = ({
@@ -32,7 +35,11 @@ const ListCard: React.FC<ListCardProps> = ({
     onDelete,
     onExportClick,
     onEmailClick,
+    onToggleStatus,
 }) => {
+    const { t } = useTranslation();
+    const isInactive = list.status === 'inactive';
+
     const handleCardClick = () => {
         onNavigate(isShared ? `/share/${list.id}` : `/list/${list.id}/edit`);
     };
@@ -46,6 +53,7 @@ const ListCard: React.FC<ListCardProps> = ({
                 transition: '0.2s',
                 cursor: 'pointer',
                 position: 'relative',
+                opacity: isInactive ? 0.65 : 1,
                 '&:hover': { boxShadow: 6, transform: 'translateY(-2px)' }
             }}
             onClick={handleCardClick}
@@ -61,6 +69,23 @@ const ListCard: React.FC<ListCardProps> = ({
                     zIndex: 1,
                 }}
             >
+                {onToggleStatus && (
+                    <Tooltip title={isInactive ? t('dashboard.tooltips.activate') : t('dashboard.tooltips.deactivate')}>
+                        <IconButton
+                            size="small"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onToggleStatus(list);
+                            }}
+                            sx={{
+                                bgcolor: 'background.paper',
+                                '&:hover': { bgcolor: isInactive ? 'success.light' : 'warning.light', color: 'white' }
+                            }}
+                        >
+                            {isInactive ? <FaToggleOff size={12} /> : <FaToggleOn size={12} />}
+                        </IconButton>
+                    </Tooltip>
+                )}
                 {onExportClick && (
                     <Tooltip title="Exportar">
                         <IconButton
@@ -114,9 +139,19 @@ const ListCard: React.FC<ListCardProps> = ({
 
             {/* Content */}
             <CardContent>
-                <Typography variant="h6" component="h3" mb={1} noWrap sx={{ pr: 3 }}>
-                    {list.name}
-                </Typography>
+                <Stack direction="row" alignItems="center" spacing={1} mb={1}>
+                    <Typography variant="h6" component="h3" noWrap sx={{ pr: 3, flexGrow: 1 }}>
+                        {list.name}
+                    </Typography>
+                    {isInactive && (
+                        <Chip
+                            label={t('dashboard.inactiveLists')}
+                            size="small"
+                            color="warning"
+                            variant="outlined"
+                        />
+                    )}
+                </Stack>
                 <Typography variant="body2" color="text.secondary" mb={1} noWrap sx={{ WebkitLineClamp: 2 }}>
                     {list.description || 'Sin descripción.'}
                 </Typography>
