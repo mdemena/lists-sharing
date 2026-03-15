@@ -4,8 +4,10 @@ export { default as ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
 export { default as EmailExportDialog } from "./EmailExportDialog";
 export { default as CreateListModal } from "./CreateListModal";
 export { default as ItemFormModal } from "./ItemFormModal";
+export { default as MoveItemDialog } from "./MoveItemDialog";
 
 export type { ConfirmDeleteDialogProps } from "./ConfirmDeleteDialog";
 export type { EmailExportDialogProps, ExportFormat } from "./EmailExportDialog";
 export type { CreateListModalProps } from "./CreateListModal";
 export type { ItemFormData, ItemFormModalProps } from "./ItemFormModal";
+export type { MoveItemDialogProps } from "./MoveItemDialog";

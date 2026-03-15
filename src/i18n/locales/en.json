@@ -42,7 +42,8 @@
         "actions": {
             "release": "Release",
             "take": "I'll take it",
-            "viewLinks": "View ({{count}})"
+            "viewLinks": "View ({{count}})",
+            "move": "Move"
         }
     },
     "dashboard": {
@@ -75,5 +76,14 @@
         "dateOfBirth": "Date of Birth",
         "save": "Save Changes",
         "saving": "Saving..."
+    },
+    "moveItem": {
+        "title": "Move item to another list",
+        "itemName": "Item",
+        "selectList": "Target list",
+        "noOtherLists": "You have no other lists available",
+        "confirm": "Move",
+        "success": "Item moved successfully",
+        "error": "Error moving the item"
     }
 }

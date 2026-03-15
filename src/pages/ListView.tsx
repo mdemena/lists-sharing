@@ -35,7 +35,7 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import AuthRequiredDialog from '../components/AuthRequiredDialog';
 import { ItemCard } from '../components/cards';
-import { ConfirmDeleteDialog, ItemFormModal, EmailExportDialog, type ItemFormData, type ExportFormat } from '../components/dialogs';
+import { ConfirmDeleteDialog, ItemFormModal, EmailExportDialog, MoveItemDialog, type ItemFormData, type ExportFormat } from '../components/dialogs';
 import { ExportMenu } from '../components/export';
 import { useExport } from '../hooks';
 import { ensureProtocol } from '../utils/url';
@@ -70,6 +70,12 @@ const ListView: React.FC = () => {
     // Delete dialog state
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState<ListItem | null>(null);
+
+    // Move dialog state
+    const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+    const [itemToMove, setItemToMove] = useState<ListItem | null>(null);
+    const [userLists, setUserLists] = useState<List[]>([]);
+    const [isMoveLoading, setIsMoveLoading] = useState(false);
 
     // Export state
     const [emailDialogOpen, setEmailDialogOpen] = useState(false);
@@ -115,6 +121,14 @@ const ListView: React.FC = () => {
         }
         fetchListData();
     }, [listId, user]);
+
+    // Load all user's lists for the move dialog (only needed in owner mode)
+    useEffect(() => {
+        if (!user || !isOwnerMode) return;
+        api.lists.list().then(({ data }) => {
+            if (data) setUserLists(data as List[]);
+        });
+    }, [user, isOwnerMode]);
 
     // Auth handlers
     const handleAuthDialogLogin = () => {
@@ -189,6 +203,28 @@ const ListView: React.FC = () => {
         }
         setItemToDelete(item);
         setDeleteDialogOpen(true);
+    };
+
+    const handleMoveItem = (item: ListItem) => {
+        setItemToMove(item);
+        setMoveDialogOpen(true);
+    };
+
+    const confirmMoveItem = async (targetListId: string) => {
+        if (!itemToMove) return;
+        setIsMoveLoading(true);
+        try {
+            const { error } = await api.items.move(itemToMove.id, targetListId);
+            if (error) throw new Error(error);
+            setItems(items.filter(i => i.id !== itemToMove.id));
+            toast.success(t('moveItem.success'));
+            setMoveDialogOpen(false);
+            setItemToMove(null);
+        } catch (error: any) {
+            toast.error(t('moveItem.error'));
+        } finally {
+            setIsMoveLoading(false);
+        }
     };
 
     const confirmDeleteItem = async () => {
@@ -366,6 +402,9 @@ const ListView: React.FC = () => {
                                             <>
                                                 <Button size="small" variant="outlined" onClick={(e) => { e.stopPropagation(); handleOpenItemModal(item); }}>
                                                     {t('common.edit')}
+                                                </Button>
+                                                <Button size="small" variant="outlined" color="secondary" disabled={item.is_adjudicated} onClick={(e) => { e.stopPropagation(); handleMoveItem(item); }}>
+                                                    {t('listView.actions.move')}
                                                 </Button>
                                                 <Button size="small" color="error" onClick={(e) => { e.stopPropagation(); handleDeleteItem(item); }}>
                                                     {t('common.delete')}
@@ -571,6 +610,16 @@ const ListView: React.FC = () => {
                 onConfirm={confirmDeleteItem}
                 itemName={itemToDelete?.name || ''}
                 itemType="elemento"
+            />
+
+            {/* Move Item Dialog */}
+            <MoveItemDialog
+                open={moveDialogOpen}
+                onClose={() => { setMoveDialogOpen(false); setItemToMove(null); }}
+                onMove={confirmMoveItem}
+                item={itemToMove}
+                availableLists={userLists.filter(l => l.id !== listId)}
+                isLoading={isMoveLoading}
             />
 
             {/* Auth Required Dialog */}

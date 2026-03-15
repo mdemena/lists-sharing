@@ -42,7 +42,8 @@
         "actions": {
             "release": "Soltar",
             "take": "Eu cólloor",
-            "viewLinks": "Ver ({{count}})"
+            "viewLinks": "Ver ({{count}})",
+            "move": "Mover"
         }
     },
     "dashboard": {
@@ -75,5 +76,14 @@
         "dateOfBirth": "Data de Nacemento",
         "save": "Gardar Cambios",
         "saving": "Gardando..."
+    },
+    "moveItem": {
+        "title": "Mover ítem a outra lista",
+        "itemName": "Ítem",
+        "selectList": "Lista de destino",
+        "noOtherLists": "Non tes outras listas dispoñibles",
+        "confirm": "Mover",
+        "success": "Ítem movido correctamente",
+        "error": "Erro ao mover o ítem"
     }
 }

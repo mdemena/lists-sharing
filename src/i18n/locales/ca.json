@@ -42,7 +42,8 @@
         "actions": {
             "release": "Alliberar",
             "take": "M'ho quedo",
-            "viewLinks": "Veure ({{count}})"
+            "viewLinks": "Veure ({{count}})",
+            "move": "Moure"
         }
     },
     "dashboard": {
@@ -75,5 +76,14 @@
         "dateOfBirth": "Data de Naixement",
         "save": "Desa els canvis",
         "saving": "Desant..."
+    },
+    "moveItem": {
+        "title": "Moure ítem a una altra llista",
+        "itemName": "Ítem",
+        "selectList": "Llista de destí",
+        "noOtherLists": "No tens altres llistes disponibles",
+        "confirm": "Moure",
+        "success": "Ítem mogut correctament",
+        "error": "Error en moure l'ítem"
     }
 }

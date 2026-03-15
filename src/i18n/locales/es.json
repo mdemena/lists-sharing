@@ -42,7 +42,8 @@
         "actions": {
             "release": "Soltar",
             "take": "Yo lo tomo",
-            "viewLinks": "Ver ({{count}})"
+            "viewLinks": "Ver ({{count}})",
+            "move": "Mover"
         }
     },
     "dashboard": {
@@ -75,5 +76,14 @@
         "dateOfBirth": "Fecha de Nacimiento",
         "save": "Guardar Cambios",
         "saving": "Guardando..."
+    },
+    "moveItem": {
+        "title": "Mover ítem a otra lista",
+        "itemName": "Ítem",
+        "selectList": "Lista de destino",
+        "noOtherLists": "No tienes otras listas disponibles",
+        "confirm": "Mover",
+        "success": "Ítem movido correctamente",
+        "error": "Error al mover el ítem"
     }
 }

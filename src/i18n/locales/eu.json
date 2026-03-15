@@ -42,7 +42,8 @@
         "actions": {
             "release": "Askatu",
             "take": "Nik hartzen dut",
-            "viewLinks": "Ikusi ({{count}})"
+            "viewLinks": "Ikusi ({{count}})",
+            "move": "Mugitu"
         }
     },
     "dashboard": {
@@ -75,5 +76,14 @@
         "dateOfBirth": "Jaiotze data",
         "save": "Gorde Aldaketak",
         "saving": "Gordetzen..."
+    },
+    "moveItem": {
+        "title": "Elementua beste zerrenda batera mugitu",
+        "itemName": "Elementua",
+        "selectList": "Helmuga zerrenda",
+        "noOtherLists": "Ez daukazu beste zerrendarik eskuragarri",
+        "confirm": "Mugitu",
+        "success": "Elementua ondo mugitu da",
+        "error": "Errorea elementua mugitzean"
     }
 }

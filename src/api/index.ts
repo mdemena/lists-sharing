@@ -244,6 +244,19 @@ export const api = {
             await client.delete(`/items?itemId=${itemId}`);
             return { error: null };
         },
+        move: async (itemId: string, targetListId: string) => {
+            try {
+                const response = await client.put(`/items?itemId=${itemId}`, {
+                    list_id: targetListId,
+                });
+                return { data: response.data, error: null };
+            } catch (error: any) {
+                return {
+                    data: null,
+                    error: error.response?.data?.error || error.message,
+                };
+            }
+        },
         adjudicate: async (itemId: string, adjudicate: boolean) => {
             try {
                 const response = await client.put(`/items?itemId=${itemId}`, {
